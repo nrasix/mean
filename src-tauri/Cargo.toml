@@ -1,0 +1,30 @@
+[package]
+name = "mean-translator"
+version = "0.1.0"
+description = "Кроссплатформенный лаунчер-переводчик"
+authors = ["Mean Translator"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "mean_translator_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-clipboard-manager = "2"
+tauri-plugin-store = "2"
+
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json", "gzip", "cookies", "rustls-tls"] }
+tokio = { version = "1", features = ["full"] }
+thiserror = "2"
+regex = "1"
+
+[features]
+custom-protocol = ["tauri/custom-protocol"]
