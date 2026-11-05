@@ -129,11 +129,10 @@ export function ResultList({
                     ? "rounded-md bg-white p-1.5 text-black transition-colors hover:bg-zinc-200"
                     : actionClass
                 }
-                title={
-                  isTtsPlaying
-                    ? "Остановить озвучку (Ctrl+Enter)"
-                    : "Озвучить (Ctrl+Enter)"
+                data-tooltip={
+                  isTtsPlaying ? "Остановить озвучку" : "Озвучить перевод"
                 }
+                data-tooltip-keys="Ctrl+Enter"
                 aria-label={
                   isTtsPlaying ? "Остановить озвучку" : "Озвучить перевод"
                 }
@@ -148,7 +147,8 @@ export function ResultList({
                 type="button"
                 onClick={() => onCopy(result.translated_text, false)}
                 className={actionClass}
-                title="Копировать (Ctrl+C)"
+                data-tooltip="Копировать перевод"
+                data-tooltip-keys="Ctrl+C"
                 aria-label="Копировать перевод"
               >
                 <Copy className="h-4 w-4" strokeWidth={1.8} />
@@ -189,7 +189,8 @@ export function ResultList({
                                 ? "bg-white font-medium text-black"
                                 : "text-zinc-200 hover:bg-white/[0.06] hover:text-white"
                             }`}
-                            title="Enter — скопировать"
+                            data-tooltip="Скопировать и закрыть"
+                            data-tooltip-keys="Enter"
                           >
                             {term}
                           </button>

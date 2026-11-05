@@ -23,7 +23,8 @@ export function InputPanel({
             type="button"
             onClick={() => onTextChange("")}
             className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
-            title="Очистить (Ctrl+U)"
+            data-tooltip="Очистить ввод"
+            data-tooltip-keys="Ctrl+U"
             aria-label="Очистить ввод"
           >
             <X className="h-3 w-3" strokeWidth={1.8} />

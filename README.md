@@ -101,7 +101,7 @@ The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-p
 | `↑` / `↓` | Navigate dictionary entries |
 | `Esc` | Hide the window |
 
-The global shortcut can be changed in Settings (gear icon), along with the provider, languages, debounce delay and the full hotkey list.
+The global shortcut can be changed in Settings (gear icon), along with the provider, languages, debounce delay, autostart and the full hotkey list. The native context menu is replaced with a custom one for cut / copy / paste / select all.
 
 ## How it works
 

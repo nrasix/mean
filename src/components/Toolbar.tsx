@@ -45,7 +45,7 @@ export function Toolbar({
     <header className="shrink-0">
       <div
         className="group flex h-4 cursor-grab select-none items-center justify-center active:cursor-grabbing"
-        title="Перетащить окно"
+        data-tooltip="Перетащить окно"
         onMouseDown={(event) => {
           if (event.button !== 0) {
             return;
@@ -74,7 +74,7 @@ export function Toolbar({
             type="button"
             onClick={onSwapLanguages}
             className="border-x border-line px-2 py-1.5 text-zinc-400 transition-colors hover:bg-white/[0.05] hover:text-white"
-            title="Поменять языки местами"
+            data-tooltip="Поменять языки местами"
             aria-label="Поменять языки местами"
           >
             <ArrowLeftRight className="h-3.5 w-3.5" strokeWidth={1.8} />
@@ -99,7 +99,8 @@ export function Toolbar({
           type="button"
           onClick={onToggleProvider}
           className="flex items-center gap-1.5 rounded-md px-2 py-1.5 font-mono text-[11px] font-medium uppercase tracking-wider text-zinc-300 transition-colors hover:bg-white/[0.05] hover:text-white"
-          title="Сменить провайдера (Tab)"
+          data-tooltip="Сменить провайдера"
+          data-tooltip-keys="Tab"
         >
           <Globe className="h-3.5 w-3.5" strokeWidth={1.8} />
           {providerLabel[provider]}
@@ -116,7 +117,7 @@ export function Toolbar({
             type="button"
             onClick={onOpenSettings}
             className="rounded-md p-2 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white"
-            title="Настройки"
+            data-tooltip="Настройки"
             aria-label="Настройки"
           >
             <Settings className="h-4 w-4" strokeWidth={1.8} />

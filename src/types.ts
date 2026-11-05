@@ -22,6 +22,7 @@ export interface AppSettings {
   nativeLang: string;
   secondLang: string;
   debounceMs: number;
+  autostart: boolean;
 }
 
 export interface FlatDictionaryItem {

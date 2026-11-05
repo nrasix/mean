@@ -5,6 +5,8 @@ import { useEffect, useRef } from "react";
 interface UseWindowShortcutEventsOptions {
   onShortcutOpened: () => void;
   onOpenSettings: () => void;
+  /** Окно скрыто (шорткат, потеря фокуса, трей) — сессию нужно очистить. */
+  onWindowHidden: () => void;
   /** Возвращает true, если Escape уже обработан (например, закрытием настроек). */
   onEscape: () => boolean;
 }
@@ -28,6 +30,9 @@ export function useWindowShortcutEvents(options: UseWindowShortcutEventsOptions)
           }),
           listen("app:open-settings", () => {
             callbacksRef.current.onOpenSettings();
+          }),
+          listen("app:window-hidden", () => {
+            callbacksRef.current.onWindowHidden();
           }),
         ]);
 

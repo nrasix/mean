@@ -54,6 +54,39 @@ function ShortcutHint({ keys, label }: { keys: string; label: string }) {
   );
 }
 
+function Toggle({
+  checked,
+  label,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors ${
+        checked
+          ? "border-white/60 bg-white"
+          : "border-line bg-white/[0.06] hover:bg-white/[0.09]"
+      }`}
+    >
+      <span
+        className={`inline-block h-3.5 w-3.5 rounded-full transition-transform ${
+          checked
+            ? "translate-x-[18px] bg-black"
+            : "translate-x-0.5 bg-zinc-400"
+        }`}
+      />
+    </button>
+  );
+}
+
 const providerOptions = [
   { value: "google", label: "Google" },
   { value: "bing", label: "Bing" },
@@ -117,6 +150,7 @@ export function SettingsModal({
             onClick={onClose}
             className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-white/[0.06] hover:text-white"
             aria-label="Закрыть настройки"
+            data-tooltip="Закрыть настройки"
           >
             <X className="h-4 w-4" strokeWidth={1.8} />
           </button>
@@ -174,6 +208,19 @@ export function SettingsModal({
               />
             </Row>
           </Section>
+
+          <Section title="Система">
+            <Row label="Запускать при старте системы">
+              <Toggle
+                checked={draft.autostart}
+                label="Автозапуск при старте системы"
+                onChange={(value) => update("autostart", value)}
+              />
+            </Row>
+          </Section>
+          <p className="px-1 text-[11px] leading-relaxed text-zinc-500">
+            При автозапуске приложение стартует скрытым в трее.
+          </p>
 
           <section>
             <div className="mb-2 flex items-center justify-between">

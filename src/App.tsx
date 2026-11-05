@@ -2,12 +2,19 @@ import { invoke } from "@tauri-apps/api/core";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import {
+  disable as disableAutostart,
+  enable as enableAutostart,
+  isEnabled as isAutostartEnabled,
+} from "@tauri-apps/plugin-autostart";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ContextMenu } from "./components/ContextMenu";
 import { InputPanel } from "./components/InputPanel";
 import { ResultList } from "./components/ResultList";
 import { SettingsModal } from "./components/SettingsModal";
 import { Toast } from "./components/Toast";
 import { Toolbar } from "./components/Toolbar";
+import { TooltipLayer } from "./components/Tooltip";
 import { useDebounce } from "./hooks/useDebounce";
 import { useTranslation } from "./hooks/useTranslation";
 import { useWindowShortcutEvents } from "./hooks/useWindowShortcutEvents";
@@ -69,6 +76,7 @@ export default function App() {
     isLoading,
     targetLangUsed,
     translate,
+    clear: clearTranslation,
   } = useTranslation({
     sourceLang,
     targetLang,
@@ -78,6 +86,13 @@ export default function App() {
   });
 
   const debouncedText = useDebounce(text, settings.debounceMs);
+
+  const focusInput = useCallback(() => {
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -93,13 +108,27 @@ export default function App() {
         return;
       }
 
-      setSettings(effective);
-      setProvider(effective.provider);
+      let autostart = effective.autostart;
+      try {
+        autostart = await isAutostartEnabled();
+      } catch (autostartError) {
+        console.warn("Не удалось проверить автозагрузку", autostartError);
+      }
+      if (cancelled) {
+        return;
+      }
+
+      const reconciled = { ...effective, autostart };
+      setSettings(reconciled);
+      setProvider(reconciled.provider);
       setSettingsLoaded(true);
 
-      if (effective.mainShortcut !== stored.mainShortcut) {
-        void saveSettings(effective).catch((saveError) => {
-          console.warn("Не удалось сохранить скорректированный шорткат", saveError);
+      if (
+        reconciled.mainShortcut !== stored.mainShortcut ||
+        reconciled.autostart !== stored.autostart
+      ) {
+        void saveSettings(reconciled).catch((saveError) => {
+          console.warn("Не удалось сохранить скорректированные настройки", saveError);
         });
       }
     })();
@@ -168,6 +197,14 @@ export default function App() {
     setTtsPlaying(false);
   }, []);
 
+  // Полный сброс сессии: при следующем открытии окно пустое.
+  const resetSession = useCallback(() => {
+    stopTts();
+    setText("");
+    setSelectedIndex(-1);
+    clearTranslation();
+  }, [clearTranslation, stopTts]);
+
   useEffect(() => {
     return () => {
       if (toastTimerRef.current !== null) {
@@ -183,7 +220,10 @@ export default function App() {
 
     void getCurrentWindow()
       .onFocusChanged(({ payload }) => {
-        if (!payload) {
+        if (payload) {
+          // Окно открылось любым способом — ввод сразу готов к работе.
+          focusInput();
+        } else {
           stopTts();
         }
       })
@@ -200,7 +240,7 @@ export default function App() {
 
     const onVisibilityChange = () => {
       if (document.hidden) {
-        stopTts();
+        resetSession();
       }
     };
 
@@ -211,7 +251,7 @@ export default function App() {
       unlisten?.();
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [stopTts]);
+  }, [focusInput, resetSession, stopTts]);
 
   const copyText = useCallback(
     async (value: string, hideAfter: boolean) => {
@@ -224,7 +264,7 @@ export default function App() {
       }
 
       if (hideAfter) {
-        stopTts();
+        resetSession();
         try {
           await getCurrentWindow().hide();
         } catch (hideError) {
@@ -234,7 +274,7 @@ export default function App() {
         showToast("Скопировано");
       }
     },
-    [showToast, stopTts],
+    [resetSession, showToast],
   );
 
   const playTts = useCallback(
@@ -322,6 +362,15 @@ export default function App() {
           applied.mainShortcut = next.mainShortcut;
         }
 
+        if (next.autostart !== settings.autostart) {
+          if (next.autostart) {
+            await enableAutostart();
+          } else {
+            await disableAutostart();
+          }
+          applied.autostart = next.autostart;
+        }
+
         await saveSettings(next);
         setSettings(next);
         setProvider(next.provider);
@@ -335,13 +384,6 @@ export default function App() {
     [settings, showToast],
   );
 
-  const focusInput = useCallback(() => {
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    });
-  }, []);
-
   const handleShortcutOpened = useCallback(() => {
     focusInput();
   }, [focusInput]);
@@ -351,13 +393,14 @@ export default function App() {
       setSettingsOpen(false);
       return true;
     }
-    stopTts();
+    resetSession();
     return false;
-  }, [isSettingsOpen, stopTts]);
+  }, [isSettingsOpen, resetSession]);
 
   useWindowShortcutEvents({
     onShortcutOpened: handleShortcutOpened,
     onOpenSettings: () => setSettingsOpen(true),
+    onWindowHidden: resetSession,
     onEscape: handleEscape,
   });
 
@@ -506,6 +549,9 @@ export default function App() {
       </div>
 
       <Toast message={toast} />
+
+      <ContextMenu inputRef={inputRef} onNotify={showToast} />
+      <TooltipLayer />
 
       {isSettingsOpen ? (
         <SettingsModal

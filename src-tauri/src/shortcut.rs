@@ -6,8 +6,10 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 use crate::AppState;
 
-/// Пока окно двигают, события потери фокуса не должны его скрывать.
-const DRAG_GRACE: Duration = Duration::from_millis(1500);
+/// Сколько времени после последнего движения окна считаем, что идёт перетаскивание.
+const DRAG_GRACE: Duration = Duration::from_millis(400);
+/// Шаг ожидания, пока перетаскивание завершится.
+const DRAG_POLL: Duration = Duration::from_millis(120);
 
 pub const FALLBACK_MAIN_SHORTCUT: &str = "CommandOrControl+Shift+Space";
 
@@ -95,12 +97,24 @@ pub fn toggle_translator_window(app: &AppHandle) {
     let is_focused = window.is_focused().unwrap_or(false);
 
     if is_visible && is_focused {
-        if let Err(error) = window.hide() {
-            eprintln!("Не удалось скрыть окно: {error}");
-        }
+        hide_window(app);
     } else {
         show_window(app, true);
     }
+}
+
+/// Скрывает окно и сообщает фронтенду, что сессию нужно очистить.
+fn hide_window(app: &AppHandle) {
+    let Some(window) = app.get_webview_window("main") else {
+        return;
+    };
+
+    if let Err(error) = window.hide() {
+        eprintln!("Не удалось скрыть окно: {error}");
+        return;
+    }
+
+    let _ = app.emit("app:window-hidden", ());
 }
 
 /// Показывает и фокусирует окно переводчика.
@@ -111,6 +125,8 @@ pub fn show_window(app: &AppHandle, notify_frontend: bool) {
     };
 
     let _ = window.unminimize();
+    // Каждое открытие — строго по центру текущего экрана.
+    let _ = window.center();
 
     if let Err(error) = window.show() {
         eprintln!("Не удалось показать окно: {error}");
@@ -151,13 +167,35 @@ fn attach_window_events(app: &AppHandle) -> Result<(), String> {
         WindowEvent::Moved(_) => mark_drag(&app_handle.state::<AppState>()),
         WindowEvent::Focused(false) => {
             let state = app_handle.state::<AppState>();
-            if recently_dragged(&state) {
+
+            // Если окно только что двигали, даём перетаскиванию завершиться:
+            // потеря фокуса во время drag не должна оставлять окно навсегда открытым.
+            if let Some(delay) = drag_grace_remaining(&state) {
+                let app = app_handle.clone();
+                tauri::async_runtime::spawn(async move {
+                    tokio::time::sleep(delay).await;
+
+                    loop {
+                        let Some(window) = app.get_webview_window("main") else {
+                            return;
+                        };
+
+                        if window.is_focused().unwrap_or(false) {
+                            return;
+                        }
+
+                        if !recently_dragged(&app.state::<AppState>()) {
+                            hide_window(&app);
+                            return;
+                        }
+
+                        tokio::time::sleep(DRAG_POLL).await;
+                    }
+                });
                 return;
             }
 
-            if let Some(window) = app_handle.get_webview_window("main") {
-                let _ = window.hide();
-            }
+            hide_window(&app_handle);
         }
         _ => {}
     });
@@ -169,6 +207,13 @@ fn mark_drag(state: &AppState) {
     if let Ok(mut guard) = state.last_drag.lock() {
         *guard = Some(Instant::now());
     }
+}
+
+/// Остаток защитного окна после последнего движения окна.
+fn drag_grace_remaining(state: &AppState) -> Option<Duration> {
+    let at = state.last_drag.lock().ok().and_then(|guard| *guard)?;
+    let elapsed = at.elapsed();
+    (elapsed < DRAG_GRACE).then(|| DRAG_GRACE - elapsed)
 }
 
 fn recently_dragged(state: &AppState) -> bool {

@@ -10,6 +10,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   nativeLang: "ru",
   secondLang: "en",
   debounceMs: 300,
+  autostart: false,
 };
 
 const STORE_PATH = "settings.json";
@@ -37,6 +38,7 @@ function sanitize(settings: AppSettings): AppSettings {
     debounceMs: Number.isFinite(debounce)
       ? Math.min(800, Math.max(150, Math.round(debounce)))
       : DEFAULT_SETTINGS.debounceMs,
+    autostart: Boolean(settings.autostart),
   };
 }
 
