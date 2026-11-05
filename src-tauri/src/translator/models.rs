@@ -62,7 +62,7 @@ pub enum TranslateError {
 pub fn truncate_body(body: &str) -> String {
     const MAX_CHARS: usize = 300;
 
-    let cleaned = body.replace('\n', " ").replace('\r', " ");
+    let cleaned = body.replace(['\n', '\r'], " ");
     if cleaned.chars().count() <= MAX_CHARS {
         cleaned
     } else {

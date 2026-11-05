@@ -1,15 +1,13 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
-use reqwest::{header, Client, StatusCode};
 use regex::Regex;
+use reqwest::{header, Client, StatusCode};
 use serde::Deserialize;
 use tokio::sync::RwLock;
 
 use super::client::{looks_like_captcha, response_error};
-use super::models::{
-    truncate_body, TranslateError, TranslationRequest, TranslationResponse,
-};
+use super::models::{truncate_body, TranslateError, TranslationRequest, TranslationResponse};
 
 const TRANSLATOR_PAGE: &str = "https://www.bing.com/translator";
 const TRANSLATE_ENDPOINT: &str = "https://www.bing.com/ttranslatev3";
@@ -173,17 +171,15 @@ impl BingProvider {
             .map(|value| value.as_str().to_string())
             .ok_or_else(|| TranslateError::Parse("не найден параметр IID".to_string()))?;
 
-        let abuse = abuse_re
-            .captures(html)
-            .ok_or_else(|| {
-                TranslateError::Parse("не найден params_AbusePreventionHelper".to_string())
-            })?;
+        let abuse = abuse_re.captures(html).ok_or_else(|| {
+            TranslateError::Parse("не найден params_AbusePreventionHelper".to_string())
+        })?;
 
         let key = abuse[1].to_string();
         let token = abuse[2].to_string();
-        let validity_ms = abuse[3]
-            .parse::<u64>()
-            .map_err(|err| TranslateError::Parse(format!("некорректный срок жизни токена: {err}")))?;
+        let validity_ms = abuse[3].parse::<u64>().map_err(|err| {
+            TranslateError::Parse(format!("некорректный срок жизни токена: {err}"))
+        })?;
 
         Ok(BingToken {
             ig,
@@ -196,12 +192,8 @@ impl BingProvider {
 
     fn parse_response(body: &str) -> Result<TranslationResponse, TranslateError> {
         let payload: Vec<BingTranslationItem> = serde_json::from_str(body)
-            .or_else(|_| {
-                serde_json::from_str::<BingTranslationItem>(body).map(|item| vec![item])
-            })
-            .map_err(|err| {
-                TranslateError::Parse(format!("{}: {}", err, truncate_body(body)))
-            })?;
+            .or_else(|_| serde_json::from_str::<BingTranslationItem>(body).map(|item| vec![item]))
+            .map_err(|err| TranslateError::Parse(format!("{}: {}", err, truncate_body(body))))?;
 
         let first = payload.first().ok_or(TranslateError::EmptyResponse)?;
         let translation = first

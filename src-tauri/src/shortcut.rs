@@ -175,11 +175,7 @@ fn recently_dragged(state: &AppState) -> bool {
     state
         .last_drag
         .lock()
-        .map(|guard| {
-            guard
-                .map(|at| at.elapsed() < DRAG_GRACE)
-                .unwrap_or(false)
-        })
+        .map(|guard| guard.map(|at| at.elapsed() < DRAG_GRACE).unwrap_or(false))
         .unwrap_or(false)
 }
 

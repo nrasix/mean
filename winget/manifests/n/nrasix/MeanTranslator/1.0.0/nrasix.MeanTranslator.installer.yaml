@@ -1,0 +1,19 @@
+PackageIdentifier: nrasix.MeanTranslator
+PackageVersion: 1.0.0
+InstallerLocale: en-US
+InstallerType: nullsoft
+Scope: user
+InstallModes:
+  - interactive
+  - silent
+  - silentWithProgress
+UpgradeBehavior: install
+Installers:
+  - Architecture: x64
+    InstallerUrl: https://github.com/nrasix/mean-translator/releases/download/v1.0.0/Mean%20Translator_1.0.0_x64-setup.exe
+    InstallerSha256: 2B6930735763B50AC08900B53D907D91AC89A4ACA71127E2A0EB0463AB5E8363
+    InstallerSwitches:
+      Silent: /S
+      SilentWithProgress: /S
+ManifestType: installer
+ManifestVersion: 1.6.0

@@ -1,0 +1,33 @@
+name: Publish to winget
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Тег релиза, например v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  winget:
+    name: Submit manifest
+    runs-on: windows-latest
+    # Включите job: Settings → Secrets and variables → Actions → Variables →
+    # New repository variable: WINGET_ENABLED = true
+    if: vars.WINGET_ENABLED == 'true'
+    timeout-minutes: 15
+
+    steps:
+      - name: Submit to microsoft/winget-pkgs
+        uses: vedantmgoyal2009/winget-releaser@v2
+        with:
+          identifier: nrasix.MeanTranslator
+          installers-regex: 'setup\.exe$'
+          token: ${{ secrets.WINGET_TOKEN }}
+          release-tag: ${{ github.event.release.tag_name || github.event.inputs.tag }}

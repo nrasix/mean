@@ -63,8 +63,16 @@
 │   ├── capabilities/default.json # разрешения окна / clipboard / shortcut / store
 │   ├── tauri.conf.json
 │   └── Cargo.toml
-├── .github/workflows/release.yml
+├── .github/workflows/
+│   ├── ci.yml                    # fmt, clippy, tests, frontend build для PR
+│   ├── release.yml               # сборка релиза по тегу + portable zip
+│   └── winget.yml                # публикация манифеста в winget-pkgs
+├── winget/manifests/             # манифест nrasix.MeanTranslator
+├── docs/signpath-workflow.example.yml  # шаблон подписи Windows
+├── install.ps1                    # установка последнего релиза одной командой
 ├── README.md
+├── inst.md                        # настройка репозитория, CI, релизов
+├── LICENSE
 └── AGENTS.md
 ```
 

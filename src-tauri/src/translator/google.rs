@@ -59,9 +59,8 @@ impl GoogleProvider {
         ];
 
         let body = send_google(client, ENDPOINT, &params).await?;
-        let payload: GooglePayload = serde_json::from_str(&body).map_err(|err| {
-            TranslateError::Parse(format!("{}: {}", err, truncate_body(&body)))
-        })?;
+        let payload: GooglePayload = serde_json::from_str(&body)
+            .map_err(|err| TranslateError::Parse(format!("{}: {}", err, truncate_body(&body))))?;
 
         let translated_text = payload
             .sentences
@@ -148,9 +147,8 @@ impl GoogleProvider {
         ];
 
         let body = send_google(client, CHROME_ENDPOINT, &params).await?;
-        let payload: Value = serde_json::from_str(&body).map_err(|err| {
-            TranslateError::Parse(format!("{}: {}", err, truncate_body(&body)))
-        })?;
+        let payload: Value = serde_json::from_str(&body)
+            .map_err(|err| TranslateError::Parse(format!("{}: {}", err, truncate_body(&body))))?;
 
         let (translated_text, detected_source_lang) = parse_chrome_payload(&payload);
         let translated_text = translated_text.trim().to_string();

@@ -1,0 +1,77 @@
+# Шаблон workflow для подписи Windows-релизов через SignPath Foundation.
+#
+# Это НЕ активный workflow: он лежит в docs/, чтобы GitHub Actions его не запускал.
+# Когда заявка в SignPath будет одобрена:
+#   1. Скопируйте файл в .github/workflows/signpath.yml
+#   2. Заполните переменные репозитория (Settings → Secrets and variables → Actions):
+#        SIGNPATH_ENABLED=true
+#        SIGNPATH_ORGANIZATION_ID=<organization id>
+#        SIGNPATH_PROJECT_SLUG=<project slug>
+#        SIGNPATH_SIGNING_POLICY_SLUG=<policy slug>
+#        SIGNPATH_ARTIFACT_CONFIGURATION_SLUG=<artifact configuration slug>
+#   3. Добавьте секрет SIGNPATH_API_TOKEN.
+#
+# Workflow скачивает уже опубликованные установщики из GitHub Release,
+# отправляет их на подпись и загружает подписанные файлы обратно с --clobber.
+
+name: Sign Windows release
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Тег релиза, например v1.0.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  sign:
+    name: SignPath
+    runs-on: ubuntu-latest
+    if: vars.SIGNPATH_ENABLED == 'true'
+    timeout-minutes: 30
+
+    env:
+      TAG: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Download unsigned assets
+        run: |
+          mkdir -p unsigned
+          gh release download "$TAG" \
+            --repo "${{ github.repository }}" \
+            --pattern "*setup.exe" \
+            --pattern "*.msi" \
+            --pattern "*-portable.zip" \
+            --dir unsigned
+
+      - name: Upload artifact for signing
+        id: upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: unsigned-windows
+          path: unsigned/*
+          if-no-files-found: error
+
+      - name: Submit signing request
+        uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ steps.upload.outputs.artifact-id }}
+          artifact-configuration-slug: ${{ vars.SIGNPATH_ARTIFACT_CONFIGURATION_SLUG }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - name: Upload signed assets to release
+        run: gh release upload "$TAG" signed/* --repo "${{ github.repository }}" --clobber

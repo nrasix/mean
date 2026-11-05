@@ -115,8 +115,7 @@ fn parse_provider(value: Option<&str>) -> ProviderType {
 }
 
 fn contains_cyrillic(text: &str) -> bool {
-    text.chars()
-        .any(|ch| matches!(ch, '\u{0400}'..='\u{04FF}'))
+    text.chars().any(|ch| matches!(ch, '\u{0400}'..='\u{04FF}'))
 }
 
 #[cfg(test)]

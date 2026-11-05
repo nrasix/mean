@@ -1,5 +1,7 @@
 # Mean Translator
 
+[![CI](https://github.com/nrasix/mean-translator/actions/workflows/ci.yml/badge.svg)](https://github.com/nrasix/mean-translator/actions/workflows/ci.yml)
+
 Минималистичный фоновый лаунчер-переводчик для Windows, macOS и Linux в стиле Spotlight / Command Palette. Живёт в трее, вызывается глобальным шорткатом поверх всех окон и сразу переводит текст — без API-ключей, регистрации и подписок.
 
 <p align="center">
@@ -21,9 +23,39 @@
 
 ## Установка
 
-Готовые сборки публикуются на странице [Releases](../../releases).
+Готовые сборки: **[последний релиз](https://github.com/nrasix/mean-translator/releases/latest)**.
 
-### Windows
+### Быстрая установка (Windows)
+
+Одной командой в PowerShell — скачивает последний установщик, проверяет SHA-256 и ставит приложение в профиль пользователя (без прав администратора):
+
+```powershell
+irm https://raw.githubusercontent.com/nrasix/mean-translator/main/install.ps1 | iex
+```
+
+Можно указать конкретную версию:
+
+```powershell
+.\install.ps1 -Version v1.0.0
+```
+
+Скрипт лежит в репозитории — его можно [посмотреть перед запуском](https://github.com/nrasix/mean-translator/blob/main/install.ps1).
+
+### winget
+
+```powershell
+winget install nrasix.MeanTranslator
+```
+
+Короткий вариант по moniker:
+
+```powershell
+winget install meantranslator
+```
+
+Манифест находится в [`winget/`](winget), публикация в `microsoft/winget-pkgs` автоматизирована через GitHub Actions.
+
+### Windows вручную
 
 - **Установщик**: `*-setup.exe` (NSIS) или `.msi`.
 - **Портативная версия**: `*-windows-x64-portable.zip` — распакуйте и запустите `mean-translator.exe`. Установка не требуется.
@@ -51,6 +83,19 @@
   mean-translator --toggle
   ```
   Повторный запуск перехватывается single-instance и переключает окно, а не создаёт второй процесс.
+
+## SmartScreen и подпись кода
+
+Сборки пока **не подписаны** сертификатом Windows, поэтому:
+
+- при запуске установщика из браузера SmartScreen может показать «Windows защитила ваш компьютер»;
+- UAC покажет издателя как **Unknown publisher**;
+- установка через **winget обычно не показывает SmartScreen**, но предупреждение UAC об неизвестном издателе остаётся;
+- на Windows 11 с включённым **Smart App Control** неподписанное приложение может быть заблокировано.
+
+Чтобы обойти предупреждение при ручной установке: «Подробнее» → «Выполнить в любом случае». Это не делает приложение безопаснее — просто подтверждает запуск.
+
+Полностью убрать предупреждения можно только подписью Authenticode. Для open-source проекта подходит бесплатный [SignPath Foundation](https://signpath.org/): после одобрения заявки подпись подключается через готовый шаблон [`docs/signpath-workflow.example.yml`](docs/signpath-workflow.example.yml). Альтернативы — платный OV/EV-сертификат или публикация в Microsoft Store.
 
 ## Горячие клавиши
 
@@ -123,9 +168,12 @@ npm run tauri build
 ```bash
 npm run build          # TypeScript + Vite
 cd src-tauri
-cargo check
+cargo fmt --check
+cargo clippy --all-targets -- -D warnings
 cargo test             # сетевые live-тесты помечены #[ignore]
 ```
+
+Те же проверки выполняет CI (`.github/workflows/ci.yml`) на каждый pull request.
 
 ## Релиз
 
@@ -137,6 +185,13 @@ git push origin v1.0.0
 ```
 
 Workflow `.github/workflows/release.yml` собирает установщики для Windows, macOS (Intel и Apple Silicon) и Linux, а также портативный Windows ZIP.
+
+После публикации релиза:
+
+- `.github/workflows/winget.yml` отправляет манифест в `microsoft/winget-pkgs` (нужны переменная `WINGET_ENABLED=true` и секрет `WINGET_TOKEN`);
+- при настроенном SignPath workflow из `docs/signpath-workflow.example.yml` подписывает Windows-артефакты.
+
+Пошаговая настройка репозитория, секретов и защиты ветки — в [`inst.md`](inst.md).
 
 ## Стек
 

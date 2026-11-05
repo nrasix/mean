@@ -1,0 +1,25 @@
+PackageIdentifier: nrasix.MeanTranslator
+PackageVersion: 1.0.0
+PackageLocale: en-US
+Publisher: Mean Translator
+PublisherUrl: https://github.com/nrasix/mean-translator
+PublisherSupportUrl: https://github.com/nrasix/mean-translator/issues
+PackageName: Mean Translator
+PackageUrl: https://github.com/nrasix/mean-translator
+License: MIT
+LicenseUrl: https://github.com/nrasix/mean-translator/blob/main/LICENSE
+Copyright: Copyright (c) 2026 Mean Translator contributors
+ShortDescription: Spotlight-style background translator for Windows, macOS and Linux.
+Description: A lightweight background translator that lives in the system tray and opens over any window with a global shortcut. Translates as you type using Google or Bing without API keys, shows phonetics and dictionary entries, reads text aloud, and copies the result with a single Enter press.
+Moniker: meantranslator
+Tags:
+  - translator
+  - translation
+  - google
+  - bing
+  - tauri
+  - productivity
+  - hotkey
+ReleaseNotesUrl: https://github.com/nrasix/mean-translator/releases/tag/v1.0.0
+ManifestType: defaultLocale
+ManifestVersion: 1.6.0

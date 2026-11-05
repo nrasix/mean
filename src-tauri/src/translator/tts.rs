@@ -108,7 +108,10 @@ mod tests {
 
     #[test]
     fn short_text_is_single_chunk() {
-        assert_eq!(split_text("привет мир", 40), vec![Cow::Borrowed("привет мир")]);
+        assert_eq!(
+            split_text("привет мир", 40),
+            vec![Cow::Borrowed("привет мир")]
+        );
     }
 
     #[test]
@@ -139,7 +142,9 @@ mod tests {
 
         assert!(audio.len() > 1024);
         assert!(
-            audio.starts_with(b"ID3") || audio.starts_with(&[0xFF, 0xFB]) || audio.starts_with(&[0xFF, 0xF3]),
+            audio.starts_with(b"ID3")
+                || audio.starts_with(&[0xFF, 0xFB])
+                || audio.starts_with(&[0xFF, 0xF3]),
             "ожидался MP3-поток, получены байты: {:?}",
             &audio[..audio.len().min(8)]
         );
