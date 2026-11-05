@@ -34,7 +34,7 @@ jobs:
         if: matrix.platform == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libssl-dev pkg-config
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -66,3 +66,20 @@ jobs:
           releaseDraft: true
           prerelease: false
           args: ${{ matrix.args }}
+
+      - name: Package portable Windows build
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        run: |
+          $source = "src-tauri/target/release/mean-translator.exe"
+          $target = "mean-translator-${{ github.ref_name }}-windows-x64-portable.zip"
+          Compress-Archive -Path $source -DestinationPath $target -Force
+
+      - name: Upload portable Windows build
+        if: matrix.platform == 'windows-latest'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $asset = "mean-translator-${{ github.ref_name }}-windows-x64-portable.zip"
+          gh release upload "${{ github.ref_name }}" $asset --clobber

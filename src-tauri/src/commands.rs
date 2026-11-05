@@ -8,7 +8,7 @@ use crate::translator::tts;
 use crate::AppState;
 
 const AUTO: &str = "auto";
-const BING_FALLBACK_LABEL: &str = "Bing (Fallback)";
+const BING_FALLBACK_LABEL: &str = "Bing";
 
 /// Переводит текст выбранным провайдером.
 ///

@@ -237,7 +237,7 @@ impl BingProvider {
                 .filter(|value| !value.is_empty()),
             phonetic,
             dictionary: Vec::new(),
-            provider: "Bing Web".to_string(),
+            provider: "Bing".to_string(),
         })
     }
 }
@@ -302,6 +302,6 @@ mod tests {
         assert_eq!(response.translated_text, "бежать");
         assert_eq!(response.detected_source_lang.as_deref(), Some("en"));
         assert_eq!(response.phonetic.as_deref(), Some("rʌn"));
-        assert_eq!(response.provider, "Bing Web");
+        assert_eq!(response.provider, "Bing");
     }
 }

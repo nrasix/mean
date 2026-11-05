@@ -55,8 +55,8 @@ function ShortcutHint({ keys, label }: { keys: string; label: string }) {
 }
 
 const providerOptions = [
-  { value: "google", label: "Google Translate" },
-  { value: "bing", label: "Bing Translator" },
+  { value: "google", label: "Google" },
+  { value: "bing", label: "Bing" },
 ];
 
 const languageOptions = LANGUAGES.map((language) => ({

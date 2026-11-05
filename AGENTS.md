@@ -1,6 +1,6 @@
 # AGENTS.md — Лаунчер-переводчик (Tauri v2 + React)
 
-Настоящий файл — краткое руководство для AI-агентов и разработчиков. Источник истины по объёму работ — `TODO.md`. Задачи выполняются строго последовательно: Этап 1 → Этап 6, с проверкой критерия готовности каждого этапа перед отметкой `[x]`.
+Настоящий файл — краткое руководство для AI-агентов и разработчиков. Актуальное описание продукта и инструкции — в `README.md`; техническая истина — в коде. Версия 1.0.0 — стабильный релиз.
 
 ## Что это за проект
 
@@ -28,7 +28,7 @@
 2. **Окно — инструмент, а не приложение.** Стартует `visible: false`, живёт в трее, показывается по шорткату, скрывается по повторному шорткату / `Escape` / потере фокуса.
 3. **Никаких API-ключей.** Используются публичные веб-эндпоинты Google Translate (`translate.googleapis.com`) и Bing Translator (`bing.com/ttranslatev3`).
 4. **Один контракт данных для всех провайдеров.** Google и Bing нормализуются в общие модели `TranslationRequest` / `TranslationResponse`; UI не знает о различиях провайдеров.
-5. **Устойчивость к rate-limit.** При `429` / капче Google — автоматический fallback на Bing с пометкой `provider: "Bing (Fallback)"`.
+5. **Устойчивость к rate-limit.** При `429` / капче Google — сначала fallback на extension-эндпоинт Google, затем на Bing. В UI провайдер всегда отображается как `Google` или `Bing`, без технических суффиксов.
 6. **Шорткаты обрабатываются только по `ShortcutState::Pressed`**, иначе будет двойное срабатывание на `Released`.
 7. **Фронтенд не доверяет порядку ответов.** Debounce + проверка актуальности `requestId`, чтобы устаревшие ответы не перезатирали свежие.
 
@@ -57,14 +57,14 @@
 │   │   └── translator/
 │   │       ├── models.rs         # общие модели данных
 │   │       ├── client.rs         # общий reqwest-клиент (UA, cookies, gzip, timeout 10s)
-│   │       ├── google.rs         # Google GTX
+│   │       ├── google.rs         # Google
 │   │       ├── bing.rs           # Bing + кэш токена
 │   │       └── tts.rs            # Google TTS → MP3 bytes
 │   ├── capabilities/default.json # разрешения окна / clipboard / shortcut / store
 │   ├── tauri.conf.json
 │   └── Cargo.toml
 ├── .github/workflows/release.yml
-├── TODO.md
+├── README.md
 └── AGENTS.md
 ```
 
@@ -72,8 +72,8 @@
 
 ### Rust / переводчики
 
-- **Общий клиент** (`translator/client.rs`): `User-Agent` современного Chrome, `cookie_store(true)`, `gzip(true)`, timeout 10 с. Хранить как управляемое состояние, а не создавать на каждый запрос.
-- **Google** — `GET /translate_a/single` с `client=gtx`, `sl`, `tl`, `dt=t`, `dt=bd`, `dt=rm`, `dj=1`, `q`. Ответ: склеить `sentences[].trans`, взять `sentences[].src_translit` в `phonetic`, `dict[]` → `Vec<DictionaryEntry>`.
+- **Общий клиент** (`translator/client.rs`): `User-Agent` современного Chrome, `cookie_store(true)`, `gzip(true)`, `native-tls`, timeout 10 с. Хранить как управляемое состояние, а не создавать на каждый запрос. `native-tls` обязателен: с TLS-отпечатком rustls Google отвечает `429` на `client=gtx`.
+- **Google** — `GET /translate_a/single` с `client=gtx`, `sl`, `tl`, `dt=t`, `dt=bd`, `dt=rm`, `dj=1`, `q`. Ответ: склеить `sentences[].trans`, взять `sentences[].src_translit` в `phonetic`, `dict[]` → `Vec<DictionaryEntry>`. Благодаря `native-tls` GTX доступен штатно. Если он всё же ответит `429`/капчей, автоматически повторяем через `GET /translate_a/t?client=dict-chrome-ex` на том же хосте: ответ `["текст"]` или `[["текст","en"]]`, словаря и фонетики нет, но перевод и определённый язык доступны.
 - **Bing** — `BingTokenCache` под `tokio::sync::RwLock` с `ig`, `iid`, `key`, `token`, `expiry`. Токен достаётся из HTML `https://www.bing.com/translator` регулярками (`IG`, `data-iid`, `params_AbusePreventionHelper`). Перевод — `POST /ttranslatev3` form-urlencoded. При `401` / пустом ответе — сброс кэша, один повтор.
 - **Авто-цель** (`target_lang == "auto"`): если во входном тексте кириллица — переводить на `en`, иначе на `ru`.
 - **TTS** — `fetch_tts_audio(text, lang)` → `Vec<u8>` MP3 из `translate.googleapis.com/translate_tts`, воспроизведение во фронтенде через `Audio`.
@@ -138,7 +138,6 @@ cd src-tauri && cargo test
 
 ## Definition of Done
 
-- Выполнен критерий готовности соответствующего этапа из `TODO.md`.
 - `cargo check` и `npm run build` проходят без ошибок; релевантные тесты — зелёные.
 - Приложение работает по «горячему» сценарию: шорткат → ввод → перевод → Enter → копирование и скрытие.
 - Нет сетевых запросов из WebView; нет API-ключей; нет регрессий по скорости открытия окна.

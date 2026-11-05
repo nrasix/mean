@@ -7,11 +7,15 @@ use super::models::{truncate_body, TranslateError};
 pub const USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 
 /// Общий HTTP-клиент для всех провайдеров.
+///
+/// Используем native-tls (на Windows — Schannel): Google блокирует `client=gtx`
+/// при TLS-отпечатке rustls, а с системным TLS отвечает штатно.
 pub fn build_client() -> Result<Client, reqwest::Error> {
     Client::builder()
         .user_agent(USER_AGENT)
         .cookie_store(true)
         .gzip(true)
+        .use_native_tls()
         .timeout(Duration::from_secs(10))
         .build()
 }
