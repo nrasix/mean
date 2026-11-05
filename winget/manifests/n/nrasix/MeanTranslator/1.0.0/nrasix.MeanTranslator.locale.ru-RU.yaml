@@ -2,12 +2,12 @@ PackageIdentifier: nrasix.MeanTranslator
 PackageVersion: 1.0.0
 PackageLocale: ru-RU
 Publisher: Mean Translator
-PublisherUrl: https://github.com/nrasix/mean-translator
-PublisherSupportUrl: https://github.com/nrasix/mean-translator/issues
+PublisherUrl: https://github.com/nrasix/mean
+PublisherSupportUrl: https://github.com/nrasix/mean/issues
 PackageName: Mean Translator
-PackageUrl: https://github.com/nrasix/mean-translator
+PackageUrl: https://github.com/nrasix/mean
 License: MIT
-LicenseUrl: https://github.com/nrasix/mean-translator/blob/main/LICENSE
+LicenseUrl: https://github.com/nrasix/mean/blob/master/LICENSE
 Copyright: Copyright (c) 2026 Mean Translator contributors
 ShortDescription: Фоновый переводчик в стиле Spotlight для Windows, macOS и Linux.
 Description: Лёгкий фоновый переводчик, который живёт в трее и открывается поверх любых окон по глобальному шорткату. Переводит по мере ввода через Google или Bing без API-ключей, показывает транскрипцию и словарные статьи, озвучивает текст и копирует результат по Enter.
@@ -19,6 +19,6 @@ Tags:
   - tauri
   - продуктивность
   - горячие-клавиши
-ReleaseNotesUrl: https://github.com/nrasix/mean-translator/releases/tag/v1.0.0
+ReleaseNotesUrl: https://github.com/nrasix/mean/releases/tag/v1.0.0
 ManifestType: locale
 ManifestVersion: 1.6.0

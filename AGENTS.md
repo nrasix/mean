@@ -71,6 +71,7 @@
 ├── docs/signpath-workflow.example.yml  # шаблон подписи Windows
 ├── install.ps1                    # установка последнего релиза одной командой
 ├── README.md
+├── README.ru.md                   # русская версия README
 ├── inst.md                        # настройка репозитория, CI, релизов
 ├── LICENSE
 └── AGENTS.md

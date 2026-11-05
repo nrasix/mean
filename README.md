@@ -1,45 +1,47 @@
 # Mean Translator
 
-[![CI](https://github.com/nrasix/mean-translator/actions/workflows/ci.yml/badge.svg)](https://github.com/nrasix/mean-translator/actions/workflows/ci.yml)
+[![CI](https://github.com/nrasix/mean/actions/workflows/ci.yml/badge.svg)](https://github.com/nrasix/mean/actions/workflows/ci.yml)
 
-Минималистичный фоновый лаунчер-переводчик для Windows, macOS и Linux в стиле Spotlight / Command Palette. Живёт в трее, вызывается глобальным шорткатом поверх всех окон и сразу переводит текст — без API-ключей, регистрации и подписок.
+A minimalistic background translator launcher for Windows, macOS and Linux, inspired by Spotlight and Command Palette. It lives in the system tray, opens over any window with a global shortcut and translates as you type — no API keys, sign-ups or subscriptions.
 
 <p align="center">
   <strong>Tauri v2 · React 19 · TypeScript · Rust</strong>
 </p>
 
-## Возможности
+🇷🇺 Русская версия: [README.ru.md](README.ru.md)
 
-- **Мгновенный вызов** — глобальный шорткат `Shift+Alt+T` открывает окно поверх всех приложений.
-- **Перевод без клавиши «Перевести»** — debounce 150–800 мс, результат появляется по мере ввода.
-- **Google и Bing** — публичные веб-эндпоинты без API-ключей. При недоступности Google автоматически переключается на резервный Bing.
-- **Словарь и фонетика** — перевод, транскрипция и словарные статьи по частям речи (Google).
-- **Озвучка** — `Ctrl+Enter` запускает и останавливает TTS; звук прекращается при закрытии окна.
-- **Один Enter** — копирует перевод (или выбранное слово) в буфер и скрывает окно.
-- **Полностью с клавиатуры** — навигация по словарю, смена провайдера, очистка ввода.
-- **Монохромный интерфейс** — тёмная графитовая тема, `Inter` + `Geist Mono`, без визуального шума.
-- **Кроссплатформенность** — Windows, macOS, Linux (X11; на Wayland — через системный шорткат).
-- **Лёгкость** — Rust-бэкенд, нет Electron и сетевых запросов из WebView.
+## Features
 
-## Установка
+- **Instant access** — the `Shift+Alt+T` global shortcut opens the window above all applications.
+- **No "Translate" button** — 150–800 ms debounce, results appear while you type.
+- **Google and Bing** — public web endpoints without API keys. Google automatically falls back to Bing when unavailable.
+- **Dictionary and phonetics** — translation, transcription and dictionary entries by part of speech (Google).
+- **Text-to-speech** — `Ctrl+Enter` starts and stops playback; audio stops when the window closes.
+- **One Enter** — copies the translation (or the selected word) and hides the window.
+- **Fully keyboard-driven** — dictionary navigation, provider switching, input clearing.
+- **Monochrome UI** — dark graphite theme, `Inter` + `Geist Mono`, no visual noise.
+- **Cross-platform** — Windows, macOS, Linux (X11; on Wayland use a system shortcut).
+- **Lightweight** — Rust backend, no Electron, no network requests from the WebView.
 
-Готовые сборки: **[последний релиз](https://github.com/nrasix/mean-translator/releases/latest)**.
+## Installation
 
-### Быстрая установка (Windows)
+Ready-to-use builds: **[latest release](https://github.com/nrasix/mean/releases/latest)**.
 
-Одной командой в PowerShell — скачивает последний установщик, проверяет SHA-256 и ставит приложение в профиль пользователя (без прав администратора):
+### Quick install (Windows)
+
+One PowerShell command — downloads the latest installer, verifies its SHA-256 and installs the app into the user profile (no administrator rights required):
 
 ```powershell
-irm https://raw.githubusercontent.com/nrasix/mean-translator/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/nrasix/mean/master/install.ps1 | iex
 ```
 
-Можно указать конкретную версию:
+A specific version can be selected as well:
 
 ```powershell
 .\install.ps1 -Version v1.0.0
 ```
 
-Скрипт лежит в репозитории — его можно [посмотреть перед запуском](https://github.com/nrasix/mean-translator/blob/main/install.ps1).
+The script lives in this repository — you can [review it before running](https://github.com/nrasix/mean/blob/main/install.ps1).
 
 ### winget
 
@@ -47,99 +49,88 @@ irm https://raw.githubusercontent.com/nrasix/mean-translator/main/install.ps1 | 
 winget install nrasix.MeanTranslator
 ```
 
-Короткий вариант по moniker:
+Or by moniker:
 
 ```powershell
 winget install meantranslator
 ```
 
-Манифест находится в [`winget/`](winget), публикация в `microsoft/winget-pkgs` автоматизирована через GitHub Actions.
+The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-pkgs` is automated with GitHub Actions.
 
-### Windows вручную
+### Windows manually
 
-- **Установщик**: `*-setup.exe` (NSIS) или `.msi`.
-- **Портативная версия**: `*-windows-x64-portable.zip` — распакуйте и запустите `mean-translator.exe`. Установка не требуется.
-- Требуется **WebView2 Runtime**. В Windows 10/11 он обычно уже установлен; если нет — скачайте с [официального сайта Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/).
+- **Installer**: `*-setup.exe` (NSIS) or `.msi`.
+- **Portable build**: `*-windows-x64-portable.zip` — extract and run `mean-translator.exe`. No installation required.
+- **WebView2 Runtime** is required. It is usually preinstalled on Windows 10/11; otherwise download it from [Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/).
 
 ### macOS
 
-- Скачайте `.dmg`, перетащите приложение в `Applications`.
-- Сборка не подписана Apple. При первом запуске: правый клик по приложению → **Открыть**, либо выполните:
+- Download the `.dmg` and drag the app into `Applications`.
+- The build is not signed or notarized by Apple. On first launch use right-click → **Open**, or run:
   ```bash
   xattr -dr com.apple.quarantine "/Applications/Mean Translator.app"
   ```
-- Приложение работает как accessory: иконки в Dock нет, управление — через строку меню и шорткат.
+- The app runs as an accessory: there is no Dock icon; use the menu bar and the global shortcut.
 
 ### Linux
 
-- **AppImage** — портативный вариант: сделайте файл исполняемым и запустите.
+- **AppImage** — portable option: make it executable and run it.
   ```bash
   chmod +x Mean-Translator_*.AppImage
   ./Mean-Translator_*.AppImage
   ```
-- Либо установите `.deb` / `.rpm`.
-- На **Wayland** глобальные шорткаты приложения могут быть недоступны. Назначьте системный шорткат на запуск:
+- Alternatively install the `.deb` / `.rpm` package.
+- On **Wayland** the app's global shortcut may be unavailable. Bind a desktop shortcut to:
   ```bash
   mean-translator --toggle
   ```
-  Повторный запуск перехватывается single-instance и переключает окно, а не создаёт второй процесс.
+  A second launch is intercepted by single-instance and toggles the window instead of starting another process.
 
-## SmartScreen и подпись кода
+> **Unsigned build notice.** The current Windows builds are not code-signed, so SmartScreen and UAC may show a warning about an unknown publisher.
 
-Сборки пока **не подписаны** сертификатом Windows, поэтому:
+## Hotkeys
 
-- при запуске установщика из браузера SmartScreen может показать «Windows защитила ваш компьютер»;
-- UAC покажет издателя как **Unknown publisher**;
-- установка через **winget обычно не показывает SmartScreen**, но предупреждение UAC об неизвестном издателе остаётся;
-- на Windows 11 с включённым **Smart App Control** неподписанное приложение может быть заблокировано.
-
-Чтобы обойти предупреждение при ручной установке: «Подробнее» → «Выполнить в любом случае». Это не делает приложение безопаснее — просто подтверждает запуск.
-
-Полностью убрать предупреждения можно только подписью Authenticode. Для open-source проекта подходит бесплатный [SignPath Foundation](https://signpath.org/): после одобрения заявки подпись подключается через готовый шаблон [`docs/signpath-workflow.example.yml`](docs/signpath-workflow.example.yml). Альтернативы — платный OV/EV-сертификат или публикация в Microsoft Store.
-
-## Горячие клавиши
-
-| Сочетание | Действие |
+| Shortcut | Action |
 | --- | --- |
-| `Shift+Alt+T` | Открыть / скрыть окно (настраивается) |
-| `Enter` | Скопировать перевод или выбранное слово и закрыть |
-| `Ctrl+C` | Скопировать перевод без закрытия |
-| `Ctrl+Enter` | Озвучить / остановить озвучку |
-| `Ctrl+U` | Очистить ввод |
-| `Tab` | Сменить провайдера Google / Bing |
-| `↑` / `↓` | Перемещаться по словарным статьям |
-| `Esc` | Скрыть окно |
+| `Shift+Alt+T` | Open / hide the window (configurable) |
+| `Enter` | Copy the translation or selected word and close |
+| `Ctrl+C` | Copy the translation without closing |
+| `Ctrl+Enter` | Play / stop text-to-speech |
+| `Ctrl+U` | Clear the input |
+| `Tab` | Switch between Google and Bing |
+| `↑` / `↓` | Navigate dictionary entries |
+| `Esc` | Hide the window |
 
-Глобальный шорткат меняется в настройках (иконка шестерёнки). Там же — провайдер, языки, задержка ввода и список горячих клавиш.
+The global shortcut can be changed in Settings (gear icon), along with the provider, languages, debounce delay and the full hotkey list.
 
-## Как это работает
+## How it works
 
 ```
-Глобальный шорткат (Rust)
+Global shortcut (Rust)
         │
         ▼
-Окно Tauri (React) ──invoke──▶ Rust-команда translate_text
+Tauri window (React) ──invoke──▶ Rust command translate_text
                                       │
-                                      ├─▶ Google GTX (reqwest, native-tls)
-                                      │        └─ fallback: extension-эндпоинт Google
-                                      └─▶ Bing (fallback при недоступности Google)
+                                      ├─▶ Google (reqwest, native-tls)
+                                      │        └─ fallback: Google extension endpoint
+                                      └─▶ Bing (fallback when Google is unavailable)
 ```
 
-- Все сетевые запросы выполняются **только в Rust** через `reqwest`. WebView не ходит в сеть.
-- API-ключи не используются: применяются публичные веб-эндпоинты Google Translate и Bing Translator.
-- Google GTX вызывается через `native-tls`, потому что при TLS-отпечатке `rustls` Google отвечает `429`.
-- Ответы обоих провайдеров нормализуются в общий контракт `TranslationResponse`; UI не зависит от источника.
-- Настройки хранятся локально через `tauri-plugin-store` (`settings.json`).
+- All network requests run **only in Rust** via `reqwest`. The WebView never accesses the network.
+- No API keys are used: the app relies on public Google Translate and Bing Translator web endpoints.
+- Google is called through `native-tls`, because Google responds with `429` to the `rustls` TLS fingerprint.
+- Responses from both providers are normalized into a shared `TranslationResponse` contract; the UI does not depend on the source.
+- Settings are stored locally via `tauri-plugin-store` (`settings.json`).
 
-**Приватность:** приложение не собирает телеметрию и не отправляет данные никуда, кроме выбранного сервиса перевода. Переводимый текст уходит напрямую в Google или Bing.
+**Privacy:** the app collects no telemetry and sends data nowhere except the selected translation service. The text is sent directly to Google or Bing.
 
-## Сборка из исходников
+## Building from source
 
-### Требования
+### Requirements
 
 - [Node.js](https://nodejs.org/) 20+
 - [Rust](https://rustup.rs/) (stable)
-- Системные зависимости Tauri v2: [prerequisites](https://v2.tauri.app/start/prerequisites/)
+- Tauri v2 system dependencies: [prerequisites](https://v2.tauri.app/start/prerequisites/)
 
 Linux (Ubuntu/Debian):
 
@@ -148,67 +139,60 @@ sudo apt install libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev \
   patchelf libssl-dev pkg-config
 ```
 
-### Запуск
+### Development
 
 ```bash
 npm install
 npm run tauri dev
 ```
 
-### Сборка релиза
+### Release build
 
 ```bash
 npm run tauri build
 ```
 
-Артефакты появятся в `src-tauri/target/release/bundle/`, готовый бинарник — в `src-tauri/target/release/`.
+Artifacts appear in `src-tauri/target/release/bundle/`; the standalone binary is in `src-tauri/target/release/`.
 
-### Проверки
+### Checks
 
 ```bash
 npm run build          # TypeScript + Vite
 cd src-tauri
 cargo fmt --check
 cargo clippy --all-targets -- -D warnings
-cargo test             # сетевые live-тесты помечены #[ignore]
+cargo test             # network live tests are marked #[ignore]
 ```
 
-Те же проверки выполняет CI (`.github/workflows/ci.yml`) на каждый pull request.
+The same checks run in CI (`.github/workflows/ci.yml`) for every pull request.
 
-## Релиз
+## Release
 
-Релизы собираются GitHub Actions при пуше тега:
+Releases are built by GitHub Actions when a tag is pushed:
 
 ```bash
 git tag v1.0.0
 git push origin v1.0.0
 ```
 
-Workflow `.github/workflows/release.yml` собирает установщики для Windows, macOS (Intel и Apple Silicon) и Linux, а также портативный Windows ZIP.
+`.github/workflows/release.yml` produces Windows installers, macOS builds for Intel and Apple Silicon, Linux packages, and a portable Windows ZIP.
 
-После публикации релиза:
+## Stack
 
-- `.github/workflows/winget.yml` отправляет манифест в `microsoft/winget-pkgs` (нужны переменная `WINGET_ENABLED=true` и секрет `WINGET_TOKEN`);
-- при настроенном SignPath workflow из `docs/signpath-workflow.example.yml` подписывает Windows-артефакты.
-
-Пошаговая настройка репозитория, секретов и защиты ветки — в [`inst.md`](inst.md).
-
-## Стек
-
-| Слой | Технологии |
+| Layer | Technologies |
 | --- | --- |
-| Ядро | Tauri v2, Rust, `reqwest`, `tokio`, `serde`, `thiserror`, `regex` |
-| Фронтенд | React 19, TypeScript, Vite, Tailwind CSS, `lucide-react` |
-| Плагины | global-shortcut, clipboard-manager, store, single-instance |
-| Шрифты | `@fontsource-variable/inter`, `@fontsource-variable/geist-mono` |
+| Core | Tauri v2, Rust, `reqwest`, `tokio`, `serde`, `thiserror`, `regex` |
+| Frontend | React 19, TypeScript, Vite, Tailwind CSS, `lucide-react` |
+| Plugins | global-shortcut, clipboard-manager, store, single-instance |
+| Fonts | `@fontsource-variable/inter`, `@fontsource-variable/geist-mono` |
 
-## Известные ограничения
+## Known limitations
 
-- Google и Bing — неофициальные публичные эндпоинты. Сервисы могут менять ответы или временно ограничивать запросы; для этого предусмотрены fallback-цепочки.
-- Транскрипция и словарь доступны только у Google GTX. Extension-fallback и Bing возвращают перевод, но могут не вернуть словарные статьи.
-- На macOS сборка не нотаризована, поэтому первый запуск требует подтверждения.
-- На Wayland глобальный шорткат зависит от окружения рабочего стола — используйте `--toggle`.
+- Google and Bing are unofficial public endpoints. They may change responses or temporarily rate-limit requests; fallback chains are in place.
+- Phonetics and dictionary entries come from Google. The extension fallback and Bing return translations but may omit dictionary entries.
+- macOS builds are not notarized, so the first launch requires confirmation.
+- On Wayland, global shortcuts depend on the desktop environment — use `--toggle`.
 
-## Лицензия
+## License
 
-[MIT](LICENSE) © Mean Translator contributors. Проект можно свободно использовать, изменять и распространять.
+[MIT](LICENSE) © Mean Translator contributors. Free to use, modify and distribute.

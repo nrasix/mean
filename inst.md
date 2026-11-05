@@ -1,12 +1,12 @@
 # Настройка репозитория и CI
 
-Эта инструкция — для владельца репозитория `nrasix/mean-translator`. Она описывает, как залить проект на GitHub, включить проверки для pull request, настроить релизы, winget и (опционально) подпись Windows.
+Эта инструкция — для владельца репозитория `nrasix/mean`. Она описывает, как залить проект на GitHub, включить проверки для pull request, настроить релизы, winget и (опционально) подпись Windows.
 
 ## 1. Что уже лежит в репозитории
 
 | Файл | Назначение |
 | --- | --- |
-| `.github/workflows/ci.yml` | Проверки для каждого PR и push в `main`/`master` |
+| `.github/workflows/ci.yml` | Проверки для каждого pull request |
 | `.github/workflows/release.yml` | Сборка релиза по тегу `v*` и портативного Windows ZIP |
 | `.github/workflows/winget.yml` | Публикация манифеста в `microsoft/winget-pkgs` после публикации релиза |
 | `winget/manifests/...` | Манифест winget для `nrasix.MeanTranslator` |
@@ -15,17 +15,16 @@
 
 ## 2. Первый push на GitHub
 
-Создайте публичный репозиторий `mean-translator` под аккаунтом `nrasix` (без README и лишних файлов), затем:
+Создайте публичный репозиторий `mean` под аккаунтом `nrasix` (без README и лишних файлов), затем:
 
 ```bash
-git remote add origin https://github.com/nrasix/mean-translator.git
-git branch -M main
+git remote add origin https://github.com/nrasix/mean.git
 git add .
 git commit -m "release: v1.0.0"
-git push -u origin main
+git push -u origin master
 ```
 
-После первого push откройте **Actions** и убедитесь, что workflow **CI** запустился и оба job зелёные: **Frontend** и **Rust**.
+После первого push создайте pull request (можно из отдельной ветки в `master`). CI запускается только на `pull_request`, поэтому прямой push в `master` проверок не запускает.
 
 ## 3. Настройки GitHub Actions
 
@@ -38,19 +37,19 @@ git push -u origin main
 ## 4. Защита ветки и обязательные проверки
 
 1. **Settings → Branches → Add branch protection rule**.
-2. Branch name pattern: `main` (или `master`).
+2. Branch name pattern: `master`.
 3. Включите:
    - **Require a pull request before merging**;
    - **Require status checks to pass before merging**;
    - **Require branches to be up to date before merging**.
-4. В списке статусов выберите **Frontend** и **Rust** (они появляются после первого запуска CI).
+4. В списке статусов выберите **Frontend** и **Rust** (они появляются после первого pull request и запуска CI).
 5. При желании включите **Do not allow bypassing the above settings**.
 
-Теперь прямой push в `main` будет запрещён, а PR нельзя будет смёржить с падающими проверками.
+Теперь прямой push в `master` будет запрещён, а PR нельзя будет смёржить с падающими проверками.
 
 ## 5. Что проверяет CI
 
-Workflow `.github/workflows/ci.yml` запускается на `pull_request`, на push в `main`/`master` и вручную.
+Workflow `.github/workflows/ci.yml` запускается только на `pull_request`.
 
 ### Job Frontend
 

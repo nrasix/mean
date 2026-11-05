@@ -9,7 +9,7 @@
     поэтому права администратора не требуются.
 
 .EXAMPLE
-    irm https://raw.githubusercontent.com/nrasix/mean-translator/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/nrasix/mean/master/install.ps1 | iex
 
 .EXAMPLE
     .\install.ps1 -Version v1.0.0
@@ -20,7 +20,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string]$Repo = "nrasix/mean-translator",
+    [string]$Repo = "nrasix/mean",
     [string]$Version = "latest"
 )
 

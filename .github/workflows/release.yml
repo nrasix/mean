@@ -62,8 +62,8 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: "Mean Translator ${{ github.ref_name }}"
-          releaseBody: "Список изменений см. в истории коммитов."
-          releaseDraft: true
+          releaseBody: "Windows, macOS and Linux builds. See the README for details."
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
 
