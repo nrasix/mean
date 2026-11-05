@@ -34,7 +34,7 @@ tauri-plugin-autostart — автозапуск в фоновом режиме �
 
 Этап 1: Инициализация проекта и настройка зависимостей
 
-[ ] Шаг 1.1: Создание каркаса Tauri v2 + React (TypeScript)
+[x] Шаг 1.1: Создание каркаса Tauri v2 + React (TypeScript)
 
 Инициализировать проект с шаблоном react-ts через Vite и Tauri v2 CLI.
 
@@ -42,7 +42,7 @@ tauri-plugin-autostart — автозапуск в фоновом режиме �
 
 Очистить шаблонный код в src/App.tsx и src-tauri/src/lib.rs.
 
-[ ] Шаг 1.2: Подключение Rust-зависимостей (src-tauri/Cargo.toml)
+[x] Шаг 1.2: Подключение Rust-зависимостей (src-tauri/Cargo.toml)
 
 Добавить крейты для сетевых запросов и асинхронности:
 
@@ -66,11 +66,11 @@ tauri-plugin-clipboard-manager
 
 tauri-plugin-store
 
-[ ] Шаг 1.3: Установка NPM-пакетов для фронтенд-биндингов (package.json)
+[x] Шаг 1.3: Установка NPM-пакетов для фронтенд-биндингов (package.json)
 
 Установить @tauri-apps/api, @tauri-apps/plugin-global-shortcut, @tauri-apps/plugin-clipboard-manager, @tauri-apps/plugin-store.
 
-[ ] Шаг 1.4: Настройка прав доступа (src-tauri/capabilities/default.json)
+[x] Шаг 1.4: Настройка прав доступа (src-tauri/capabilities/default.json)
 
 Прописать разрешения для управления окном (core:window:allow-show, core:window:allow-hide, core:window:allow-set-focus, core:window:allow-unminimize, core:window:allow-set-size, core:window:allow-start-dragging), буфера обмена (clipboard-manager:allow-write-text, clipboard-manager:allow-read-text), глобальных шорткатов (global-shortcut:allow-register, global-shortcut:allow-unregister, global-shortcut:allow-is-registered) и хранилища (store:default).
 
@@ -78,7 +78,7 @@ tauri-plugin-store
 
 Этап 2: Архитектура переводчиков на Rust (Ядро без API-ключей)
 
-[ ] Шаг 2.1: Проектирование единых моделей данных (src-tauri/src/translator/models.rs)
+[x] Шаг 2.1: Проектирование единых моделей данных (src-tauri/src/translator/models.rs)
 
 Создать структуры, сериализуемые через #[derive(Serialize, Deserialize, Debug, Clone)]:
 
@@ -88,7 +88,7 @@ DictionaryEntry: part_of_speech: String (существительное, гла�
 
 TranslationResponse: translated_text: String, detected_source_lang: Option<String>, phonetic: Option<String>, dictionary: Vec<DictionaryEntry>, provider: String.
 
-[ ] Шаг 2.2: Создание общего HTTP-клиента (src-tauri/src/translator/client.rs)
+[x] Шаг 2.2: Создание общего HTTP-клиента (src-tauri/src/translator/client.rs)
 
 Инициализировать синглтон или управляемое состояние reqwest::Client с:
 
@@ -98,7 +98,7 @@ User-Agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML
 
 Таймаутом запроса 10 секунд.
 
-[ ] Шаг 2.3: Реализация провайдера Google Translate (src-tauri/src/translator/google.rs)
+[x] Шаг 2.3: Реализация провайдера Google Translate (src-tauri/src/translator/google.rs)
 
 Сформировать GET-запрос к https://translate.googleapis.com/translate_a/single.
 
@@ -122,7 +122,7 @@ q={text}
 
 Десериализовать JSON-ответ: склеить все элементы sentences[].trans в translated_text, извлечь sentences[].src_translit в phonetic, а массив dict[] преобразовать в Vec<DictionaryEntry>.
 
-[ ] Шаг 2.4: Реализация резервного провайдера Bing Translator (src-tauri/src/translator/bing.rs)
+[x] Шаг 2.4: Реализация резервного провайдера Bing Translator (src-tauri/src/translator/bing.rs)
 
 Реализовать структуру BingTokenCache (защищённую tokio::sync::RwLock) для хранения параметров сессии (ig, iid, key, token, expiry).
 
@@ -138,7 +138,7 @@ q={text}
 
 Если получен статус 401 или пустой ответ — сбросить кэш токена, запросить новый токен и повторить запрос 1 раз.
 
-[ ] Шаг 2.5: Регистрация Tauri-команды (src-tauri/src/commands.rs)
+[x] Шаг 2.5: Регистрация Tauri-команды (src-tauri/src/commands.rs)
 
 Создать асинхронную команду #[tauri::command] pub async fn translate_text(...) -> Result<TranslationResponse, String>.
 
