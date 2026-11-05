@@ -110,8 +110,8 @@ export function ShortcutRecorder({
   }, [recording]);
 
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-xs text-neutral-400">{label}</span>
+    <div className="flex items-center justify-between gap-3 py-2.5">
+      <span className="text-[12px] text-zinc-300">{label}</span>
       <button
         ref={buttonRef}
         type="button"
@@ -141,14 +141,16 @@ export function ShortcutRecorder({
           onChange(shortcut);
           setRecording(false);
         }}
-        className={`flex min-w-[160px] items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[11px] font-medium transition ${
+        className={`flex min-w-[165px] items-center justify-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] transition-colors ${
           recording
-            ? "border-indigo-400/60 bg-indigo-500/15 text-indigo-100"
-            : "border-white/10 bg-white/[0.04] text-neutral-300 hover:bg-white/[0.07]"
+            ? "border-white/40 bg-white/[0.08] text-white"
+            : "border-line bg-white/[0.03] text-zinc-300 hover:border-line-strong hover:bg-white/[0.06] hover:text-white"
         }`}
       >
-        <Keyboard className="h-3.5 w-3.5 opacity-70" />
-        {recording ? "Нажмите сочетание…" : formatShortcut(value)}
+        <Keyboard className="h-3.5 w-3.5 opacity-60" strokeWidth={1.8} />
+        <span className={recording ? "font-sans" : "font-mono tracking-tight"}>
+          {recording ? "Нажмите сочетание…" : formatShortcut(value)}
+        </span>
       </button>
     </div>
   );

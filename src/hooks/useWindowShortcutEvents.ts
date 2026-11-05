@@ -4,7 +4,6 @@ import { useEffect, useRef } from "react";
 
 interface UseWindowShortcutEventsOptions {
   onShortcutOpened: () => void;
-  onTranslateClipboard: (text: string) => void;
   onOpenSettings: () => void;
   /** Возвращает true, если Escape уже обработан (например, закрытием настроек). */
   onEscape: () => boolean;
@@ -26,9 +25,6 @@ export function useWindowShortcutEvents(options: UseWindowShortcutEventsOptions)
         const subscriptions = await Promise.all([
           listen("app:shortcut-opened", () => {
             callbacksRef.current.onShortcutOpened();
-          }),
-          listen<string>("app:translate-clipboard", (event) => {
-            callbacksRef.current.onTranslateClipboard(event.payload);
           }),
           listen("app:open-settings", () => {
             callbacksRef.current.onOpenSettings();

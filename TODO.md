@@ -24,7 +24,7 @@ HTTP-клиент (Rust): reqwest (с поддержкой json, gzip, cookies)
 
 tauri-plugin-global-shortcut — перехват глобальных шорткатов ОС для мгновенного открытия окна поверх любых программ и перевода выделенного текста
 
-tauri-plugin-clipboard-manager — копирование перевода по Enter и чтение буфера обмена при вызове по шорткату
+tauri-plugin-clipboard-manager — копирование перевода по Enter
 
 tauri-plugin-store — локальное сохранение настроек (выбранный провайдер, языки, пользовательские шорткаты)
 
@@ -72,7 +72,7 @@ tauri-plugin-store
 
 [x] Шаг 1.4: Настройка прав доступа (src-tauri/capabilities/default.json)
 
-Прописать разрешения для управления окном (core:window:allow-show, core:window:allow-hide, core:window:allow-set-focus, core:window:allow-unminimize, core:window:allow-set-size, core:window:allow-start-dragging), буфера обмена (clipboard-manager:allow-write-text, clipboard-manager:allow-read-text), глобальных шорткатов (global-shortcut:allow-register, global-shortcut:allow-unregister, global-shortcut:allow-is-registered) и хранилища (store:default).
+Прописать разрешения для управления окном (core:window:allow-show, core:window:allow-hide, core:window:allow-set-focus, core:window:allow-unminimize, core:window:allow-set-size, core:window:allow-start-dragging), буфера обмена (clipboard-manager:allow-write-text), глобальных шорткатов (global-shortcut:allow-register, global-shortcut:allow-unregister, global-shortcut:allow-is-registered) и хранилища (store:default).
 
 Критерий готовности Этапа 1: Команда cargo check в папке src-tauri и npm run build в корне проекта завершаются без ошибок.
 
@@ -152,7 +152,7 @@ q={text}
 
 Настроить главное окно (main):
 
-width: 680, height: 440
+width: 760, height: 480
 
 decorations: false (без системной рамки и заголовка)
 
@@ -183,14 +183,6 @@ visible: false (при старте приложение работает тих
 Если окно уже открыто и находится в фокусе:
 
 Скрыть окно (window.hide()), вернув фокус предыдущему активному приложению ОС.
-
-Шорткат №2 — Открытие с мгновенным переводом буфера обмена (CommandOrControl+Shift+T):
-
-Считать текст из системного буфера обмена на стороне Rust.
-
-Показать и сфокусировать окно переводчика.
-
-Отправить событие app:translate-clipboard с текстом из буфера во фронтенд для моментального запуска перевода без лишнего нажатия Ctrl+V.
 
 Динамическая перерегистрация шортката:
 
@@ -288,10 +280,6 @@ https://translate.googleapis.com/translate_tts?ie=UTF-8&client=gtx&tl={lang}&q={
 Сохранение конфигурации через @tauri-apps/plugin-store в файл settings.json:
 
 Глобальный шорткат вызова окна (по умолчанию Shift+Alt+T)
-
-Глобальный шорткат перевода буфера обмена (по умолчанию CommandOrControl+Shift+T)
-
-Опция «Автоматически переводить буфер обмена при открытии по основному шорткату»
 
 Провайдер по умолчанию (Google / Bing)
 

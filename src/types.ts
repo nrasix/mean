@@ -18,8 +18,6 @@ export interface TranslationResponse {
 
 export interface AppSettings {
   mainShortcut: string;
-  clipboardShortcut: string;
-  autoTranslateClipboard: boolean;
   provider: ProviderType;
   nativeLang: string;
   secondLang: string;

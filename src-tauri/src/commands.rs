@@ -76,13 +76,7 @@ pub async fn translate_text(
 
 /// Проверяет, стоит ли повторить запрос через Bing после ошибки Google.
 fn should_fallback(error: &TranslateError) -> bool {
-    match error {
-        TranslateError::RateLimited => true,
-        TranslateError::HttpStatus { status, .. } => {
-            *status == 429 || *status == 403 || *status == 503
-        }
-        _ => false,
-    }
+    !matches!(error, TranslateError::InvalidRequest(_))
 }
 
 /// Загружает MP3-озвучку текста через Google TTS.
@@ -143,7 +137,7 @@ mod tests {
     }
 
     #[test]
-    fn fallback_is_used_only_for_availability_errors() {
+    fn fallback_is_used_for_any_google_failure_except_invalid_request() {
         assert!(should_fallback(&TranslateError::RateLimited));
         assert!(should_fallback(&TranslateError::HttpStatus {
             status: 429,
@@ -153,7 +147,7 @@ mod tests {
             status: 503,
             body: String::new(),
         }));
-        assert!(!should_fallback(&TranslateError::EmptyResponse));
+        assert!(should_fallback(&TranslateError::EmptyResponse));
         assert!(!should_fallback(&TranslateError::InvalidRequest(
             "пусто".to_string()
         )));

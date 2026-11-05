@@ -1,12 +1,13 @@
 import { invoke } from "@tauri-apps/api/core";
+import type { UnlistenFn } from "@tauri-apps/api/event";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Footer } from "./components/Footer";
+import { InputPanel } from "./components/InputPanel";
 import { ResultList } from "./components/ResultList";
-import { SearchBar } from "./components/SearchBar";
 import { SettingsModal } from "./components/SettingsModal";
 import { Toast } from "./components/Toast";
+import { Toolbar } from "./components/Toolbar";
 import { useDebounce } from "./hooks/useDebounce";
 import { useTranslation } from "./hooks/useTranslation";
 import { useWindowShortcutEvents } from "./hooks/useWindowShortcutEvents";
@@ -17,7 +18,6 @@ import type { AppSettings, ProviderType } from "./types";
 
 interface ShortcutSnapshot {
   main: string;
-  clipboard: string;
 }
 
 async function applyStoredShortcuts(stored: AppSettings): Promise<AppSettings> {
@@ -30,24 +30,10 @@ async function applyStoredShortcuts(stored: AppSettings): Promise<AppSettings> {
         await invoke("update_global_shortcut", {
           oldShortcut: current.main,
           newShortcut: next.mainShortcut,
-          target: "main",
         });
       } catch (error) {
         console.warn("Не удалось применить сохранённый основной шорткат", error);
         next.mainShortcut = current.main;
-      }
-    }
-
-    if (current.clipboard !== next.clipboardShortcut) {
-      try {
-        await invoke("update_global_shortcut", {
-          oldShortcut: current.clipboard,
-          newShortcut: next.clipboardShortcut,
-          target: "clipboard",
-        });
-      } catch (error) {
-        console.warn("Не удалось применить сохранённый шорткат буфера", error);
-        next.clipboardShortcut = current.clipboard;
       }
     }
 
@@ -68,12 +54,11 @@ export default function App() {
   const [provider, setProvider] = useState<ProviderType>(
     DEFAULT_SETTINGS.provider,
   );
-  const [pinned, setPinned] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [toast, setToast] = useState<string | null>(null);
+  const [isTtsPlaying, setTtsPlaying] = useState(false);
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const settingsRef = useRef(settings);
   const toastTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
@@ -95,10 +80,6 @@ export default function App() {
   const debouncedText = useDebounce(text, settings.debounceMs);
 
   useEffect(() => {
-    settingsRef.current = settings;
-  }, [settings]);
-
-  useEffect(() => {
     let cancelled = false;
 
     void (async () => {
@@ -116,12 +97,9 @@ export default function App() {
       setProvider(effective.provider);
       setSettingsLoaded(true);
 
-      if (
-        effective.mainShortcut !== stored.mainShortcut ||
-        effective.clipboardShortcut !== stored.clipboardShortcut
-      ) {
+      if (effective.mainShortcut !== stored.mainShortcut) {
         void saveSettings(effective).catch((saveError) => {
-          console.warn("Не удалось сохранить скорректированные шорткаты", saveError);
+          console.warn("Не удалось сохранить скорректированный шорткат", saveError);
         });
       }
     })();
@@ -161,20 +139,6 @@ export default function App() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    return () => {
-      if (toastTimerRef.current !== null) {
-        window.clearTimeout(toastTimerRef.current);
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      if (audioUrlRef.current) {
-        URL.revokeObjectURL(audioUrlRef.current);
-      }
-    };
-  }, []);
-
   const showToast = useCallback((message: string) => {
     setToast(message);
     if (toastTimerRef.current !== null) {
@@ -185,6 +149,69 @@ export default function App() {
       toastTimerRef.current = null;
     }, 1800);
   }, []);
+
+  const stopTts = useCallback(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      audio.onended = null;
+      audio.onerror = null;
+      audio.pause();
+      audio.currentTime = 0;
+      audioRef.current = null;
+    }
+
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current);
+      audioUrlRef.current = null;
+    }
+
+    setTtsPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) {
+        window.clearTimeout(toastTimerRef.current);
+      }
+      stopTts();
+    };
+  }, [stopTts]);
+
+  useEffect(() => {
+    let disposed = false;
+    let unlisten: UnlistenFn | undefined;
+
+    void getCurrentWindow()
+      .onFocusChanged(({ payload }) => {
+        if (!payload) {
+          stopTts();
+        }
+      })
+      .then((fn) => {
+        if (disposed) {
+          fn();
+        } else {
+          unlisten = fn;
+        }
+      })
+      .catch((error) => {
+        console.warn("Не удалось подписаться на фокус окна", error);
+      });
+
+    const onVisibilityChange = () => {
+      if (document.hidden) {
+        stopTts();
+      }
+    };
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+
+    return () => {
+      disposed = true;
+      unlisten?.();
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [stopTts]);
 
   const copyText = useCallback(
     async (value: string, hideAfter: boolean) => {
@@ -197,6 +224,7 @@ export default function App() {
       }
 
       if (hideAfter) {
+        stopTts();
         try {
           await getCurrentWindow().hide();
         } catch (hideError) {
@@ -206,15 +234,22 @@ export default function App() {
         showToast("Скопировано");
       }
     },
-    [showToast],
+    [showToast, stopTts],
   );
 
   const playTts = useCallback(
     async (value: string, lang: string) => {
+      if (isTtsPlaying) {
+        stopTts();
+        return;
+      }
+
       const trimmed = value.trim();
       if (!trimmed) {
         return;
       }
+
+      stopTts();
 
       try {
         const bytes = await invoke<number[]>("fetch_tts_audio", {
@@ -224,13 +259,6 @@ export default function App() {
 
         if (bytes.length === 0) {
           throw new Error("Пустой аудиоответ");
-        }
-
-        if (audioRef.current) {
-          audioRef.current.pause();
-        }
-        if (audioUrlRef.current) {
-          URL.revokeObjectURL(audioUrlRef.current);
         }
 
         const url = URL.createObjectURL(
@@ -244,29 +272,25 @@ export default function App() {
           if (audioUrlRef.current === url) {
             URL.revokeObjectURL(url);
             audioUrlRef.current = null;
+            audioRef.current = null;
+            setTtsPlaying(false);
           }
         };
+        audio.onerror = () => {
+          stopTts();
+          showToast("Не удалось воспроизвести озвучку");
+        };
 
+        setTtsPlaying(true);
         await audio.play();
       } catch (ttsError) {
+        stopTts();
         console.error(ttsError);
         showToast("Не удалось воспроизвести озвучку");
       }
     },
-    [showToast],
+    [isTtsPlaying, showToast, stopTts],
   );
-
-  const togglePin = useCallback(async () => {
-    const next = !pinned;
-    try {
-      await invoke("set_window_pin", { pinned: next });
-      setPinned(next);
-      showToast(next ? "Окно закреплено" : "Автоскрытие включено");
-    } catch (pinError) {
-      console.error(pinError);
-      showToast("Не удалось изменить закрепление");
-    }
-  }, [pinned, showToast]);
 
   const toggleProvider = useCallback(() => {
     setProvider((current) => (current === "google" ? "bing" : "google"));
@@ -294,34 +318,8 @@ export default function App() {
           await invoke("update_global_shortcut", {
             oldShortcut: settings.mainShortcut,
             newShortcut: next.mainShortcut,
-            target: "main",
           });
           applied.mainShortcut = next.mainShortcut;
-        }
-
-        if (next.clipboardShortcut !== settings.clipboardShortcut) {
-          try {
-            await invoke("update_global_shortcut", {
-              oldShortcut: settings.clipboardShortcut,
-              newShortcut: next.clipboardShortcut,
-              target: "clipboard",
-            });
-            applied.clipboardShortcut = next.clipboardShortcut;
-          } catch (clipboardError) {
-            if (applied.mainShortcut !== settings.mainShortcut) {
-              try {
-                await invoke("update_global_shortcut", {
-                  oldShortcut: applied.mainShortcut,
-                  newShortcut: settings.mainShortcut,
-                  target: "main",
-                });
-                applied.mainShortcut = settings.mainShortcut;
-              } catch (rollbackError) {
-                console.error("Не удалось откатить основной шорткат", rollbackError);
-              }
-            }
-            throw clipboardError;
-          }
         }
 
         await saveSettings(next);
@@ -346,47 +344,19 @@ export default function App() {
 
   const handleShortcutOpened = useCallback(() => {
     focusInput();
-
-    if (!settingsRef.current.autoTranslateClipboard) {
-      return;
-    }
-
-    void (async () => {
-      try {
-        const clipboard = (await readText()).trim();
-        if (!clipboard) {
-          return;
-        }
-        setText(clipboard);
-        requestAnimationFrame(() => {
-          inputRef.current?.focus();
-          inputRef.current?.select();
-        });
-      } catch (clipboardError) {
-        console.warn("Буфер обмена недоступен", clipboardError);
-      }
-    })();
   }, [focusInput]);
-
-  const handleTranslateClipboard = useCallback((value: string) => {
-    setText(value);
-    requestAnimationFrame(() => {
-      inputRef.current?.focus();
-      inputRef.current?.select();
-    });
-  }, []);
 
   const handleEscape = useCallback(() => {
     if (isSettingsOpen) {
       setSettingsOpen(false);
       return true;
     }
+    stopTts();
     return false;
-  }, [isSettingsOpen]);
+  }, [isSettingsOpen, stopTts]);
 
   useWindowShortcutEvents({
     onShortcutOpened: handleShortcutOpened,
-    onTranslateClipboard: handleTranslateClipboard,
     onOpenSettings: () => setSettingsOpen(true),
     onEscape: handleEscape,
   });
@@ -414,6 +384,12 @@ export default function App() {
       const inTextarea = activeElement instanceof HTMLTextAreaElement;
       const hasTextSelection =
         inTextarea && activeElement.selectionStart !== activeElement.selectionEnd;
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "u") {
+        event.preventDefault();
+        setText("");
+        return;
+      }
 
       if (
         event.key === "Tab" &&
@@ -492,25 +468,26 @@ export default function App() {
   ]);
 
   return (
-    <div className="flex h-screen w-screen justify-center bg-transparent p-2.5">
-      <div className="relative flex h-full w-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-neutral-950/95 shadow-[0_24px_80px_rgba(0,0,0,0.65)] backdrop-blur-xl">
-        <SearchBar
+    <div className="relative flex h-screen w-screen flex-col overflow-hidden bg-surface">
+      <Toolbar
+        sourceLang={sourceLang}
+        targetLang={targetLang}
+        onSourceLangChange={setSourceLang}
+        onTargetLangChange={setTargetLang}
+        onSwapLanguages={swapLanguages}
+        provider={provider}
+        onToggleProvider={toggleProvider}
+        onOpenSettings={() => setSettingsOpen(true)}
+        isLoading={isLoading}
+        nativeLang={settings.nativeLang}
+        secondLang={settings.secondLang}
+      />
+
+      <div className="flex min-h-0 flex-1">
+        <InputPanel
           inputRef={inputRef}
           text={text}
           onTextChange={setText}
-          sourceLang={sourceLang}
-          targetLang={targetLang}
-          onSourceLangChange={setSourceLang}
-          onTargetLangChange={setTargetLang}
-          onSwapLanguages={swapLanguages}
-          provider={provider}
-          onToggleProvider={toggleProvider}
-          pinned={pinned}
-          onTogglePin={togglePin}
-          isLoading={isLoading}
-          onOpenSettings={() => setSettingsOpen(true)}
-          nativeLang={settings.nativeLang}
-          secondLang={settings.secondLang}
         />
 
         <ResultList
@@ -524,26 +501,19 @@ export default function App() {
           onPlayTts={playTts}
           onRetry={() => void translate(text)}
           targetLangUsed={targetLangUsed}
+          isTtsPlaying={isTtsPlaying}
         />
-
-        <Footer
-          provider={provider}
-          activeProvider={result?.provider ?? null}
-          mainShortcut={settings.mainShortcut}
-          clipboardShortcut={settings.clipboardShortcut}
-          pinned={pinned}
-        />
-
-        <Toast message={toast} />
-
-        {isSettingsOpen ? (
-          <SettingsModal
-            settings={settings}
-            onClose={() => setSettingsOpen(false)}
-            onSave={handleSaveSettings}
-          />
-        ) : null}
       </div>
+
+      <Toast message={toast} />
+
+      {isSettingsOpen ? (
+        <SettingsModal
+          settings={settings}
+          onClose={() => setSettingsOpen(false)}
+          onSave={handleSaveSettings}
+        />
+      ) : null}
     </div>
   );
 }

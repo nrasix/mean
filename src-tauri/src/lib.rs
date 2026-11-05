@@ -3,8 +3,8 @@ pub mod shortcut;
 pub mod translator;
 pub mod tray;
 
-use std::sync::atomic::AtomicBool;
 use std::sync::Mutex;
+use std::time::Instant;
 
 use shortcut::ShortcutSettings;
 use translator::bing::BingProvider;
@@ -15,7 +15,7 @@ pub struct AppState {
     pub http: reqwest::Client,
     pub bing: BingProvider,
     pub shortcuts: Mutex<ShortcutSettings>,
-    pub is_pinned: AtomicBool,
+    pub last_drag: Mutex<Option<Instant>>,
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -25,7 +25,7 @@ pub fn run() {
         http,
         bing: BingProvider::new(),
         shortcuts: Mutex::new(ShortcutSettings::default()),
-        is_pinned: AtomicBool::new(false),
+        last_drag: Mutex::new(None),
     };
 
     tauri::Builder::default()
@@ -65,7 +65,7 @@ pub fn run() {
             commands::fetch_tts_audio,
             shortcut::get_shortcuts,
             shortcut::update_global_shortcut,
-            shortcut::set_window_pin
+            shortcut::start_window_drag
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

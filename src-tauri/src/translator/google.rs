@@ -1,4 +1,4 @@
-use reqwest::Client;
+use reqwest::{header, Client};
 use serde::Deserialize;
 
 use super::client::{looks_like_captcha, response_error};
@@ -33,7 +33,15 @@ impl GoogleProvider {
             ("q", request.text.as_str()),
         ];
 
-        let response = client.get(ENDPOINT).query(&params).send().await?;
+        let response = client
+            .get(ENDPOINT)
+            .query(&params)
+            .header(header::REFERER, "https://translate.google.com/")
+            .header(header::ORIGIN, "https://translate.google.com")
+            .header(header::ACCEPT_LANGUAGE, "en-US,en;q=0.9")
+            .header(header::ACCEPT, "*/*")
+            .send()
+            .await?;
         let status = response.status();
         let body = response.text().await?;
 
@@ -190,6 +198,7 @@ mod tests {
     use crate::translator::models::ProviderType;
 
     #[tokio::test]
+    #[ignore = "требуется доступ к интернету и отсутствие rate-limit Google"]
     async fn google_translates_run_with_dictionary() {
         let client = build_client().expect("HTTP-клиент должен создаваться");
         let request = TranslationRequest {

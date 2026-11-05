@@ -8,8 +8,8 @@ export function Toast({ message }: ToastProps) {
   }
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-12 z-50 flex justify-center">
-      <div className="rounded-lg border border-white/10 bg-neutral-800/95 px-3 py-1.5 text-xs text-neutral-100 shadow-xl">
+    <div className="pointer-events-none absolute inset-x-0 bottom-10 z-50 flex justify-center">
+      <div className="rounded-md border border-line-strong bg-raised/95 px-3 py-1.5 text-[11px] text-zinc-100 shadow-[0_8px_24px_rgba(0,0,0,0.5)] backdrop-blur-md">
         {message}
       </div>
     </div>

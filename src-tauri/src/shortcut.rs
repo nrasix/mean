@@ -1,14 +1,15 @@
-use std::sync::atomic::Ordering;
+use std::time::{Duration, Instant};
 
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
-use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
 
 use crate::AppState;
 
+/// Пока окно двигают, события потери фокуса не должны его скрывать.
+const DRAG_GRACE: Duration = Duration::from_millis(1500);
+
 pub const FALLBACK_MAIN_SHORTCUT: &str = "CommandOrControl+Shift+Space";
-pub const DEFAULT_CLIPBOARD_SHORTCUT: &str = "CommandOrControl+Shift+T";
 
 pub fn default_main_shortcut() -> &'static str {
     "Shift+Alt+T"
@@ -18,14 +19,12 @@ pub fn default_main_shortcut() -> &'static str {
 #[derive(Debug, Clone, Serialize)]
 pub struct ShortcutSettings {
     pub main: String,
-    pub clipboard: String,
 }
 
 impl Default for ShortcutSettings {
     fn default() -> Self {
         Self {
             main: default_main_shortcut().to_string(),
-            clipboard: DEFAULT_CLIPBOARD_SHORTCUT.to_string(),
         }
     }
 }
@@ -51,13 +50,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
         } else {
             return Err(primary_error);
         }
-    }
-
-    if let Err(error) = register_clipboard(app, &settings.clipboard) {
-        eprintln!(
-            "Не удалось зарегистрировать шорткат буфера обмена {}: {}",
-            settings.clipboard, error
-        );
     }
 
     attach_window_events(app)?;
@@ -87,16 +79,6 @@ fn register_main(app: &AppHandle, shortcut: &str) -> Result<(), String> {
         .on_shortcut(shortcut, |app, _shortcut, event| {
             if event.state == ShortcutState::Pressed {
                 toggle_translator_window(app);
-            }
-        })
-        .map_err(|error| error.to_string())
-}
-
-fn register_clipboard(app: &AppHandle, shortcut: &str) -> Result<(), String> {
-    app.global_shortcut()
-        .on_shortcut(shortcut, |app, _shortcut, event| {
-            if event.state == ShortcutState::Pressed {
-                translate_from_clipboard(app);
             }
         })
         .map_err(|error| error.to_string())
@@ -158,31 +140,18 @@ pub fn show_settings(app: &AppHandle) {
     let _ = app.emit("app:open-settings", ());
 }
 
-/// Читает буфер обмена и сразу отправляет текст во фронтенд на перевод.
-pub fn translate_from_clipboard(app: &AppHandle) {
-    let text = match app.clipboard().read_text() {
-        Ok(text) => text,
-        Err(error) => {
-            eprintln!("Не удалось прочитать буфер обмена: {error}");
-            String::new()
-        }
-    };
-
-    show_window(app, false);
-    let _ = app.emit("app:translate-clipboard", text);
-}
-
-/// Скрывает окно при потере фокуса, если оно не закреплено.
+/// Скрывает окно при потере фокуса, если оно не закреплено и не перетаскивается.
 fn attach_window_events(app: &AppHandle) -> Result<(), String> {
     let window = app
         .get_webview_window("main")
         .ok_or_else(|| "окно main не найдено".to_string())?;
 
     let app_handle = app.clone();
-    window.on_window_event(move |event| {
-        if let WindowEvent::Focused(false) = event {
+    window.on_window_event(move |event| match event {
+        WindowEvent::Moved(_) => mark_drag(&app_handle.state::<AppState>()),
+        WindowEvent::Focused(false) => {
             let state = app_handle.state::<AppState>();
-            if state.is_pinned.load(Ordering::Relaxed) {
+            if recently_dragged(&state) {
                 return;
             }
 
@@ -190,9 +159,40 @@ fn attach_window_events(app: &AppHandle) -> Result<(), String> {
                 let _ = window.hide();
             }
         }
+        _ => {}
     });
 
     Ok(())
+}
+
+fn mark_drag(state: &AppState) {
+    if let Ok(mut guard) = state.last_drag.lock() {
+        *guard = Some(Instant::now());
+    }
+}
+
+fn recently_dragged(state: &AppState) -> bool {
+    state
+        .last_drag
+        .lock()
+        .map(|guard| {
+            guard
+                .map(|at| at.elapsed() < DRAG_GRACE)
+                .unwrap_or(false)
+        })
+        .unwrap_or(false)
+}
+
+/// Начинает перетаскивание окна и запоминает время, чтобы не сработало автоскрытие.
+#[tauri::command]
+pub fn start_window_drag(
+    window: tauri::WebviewWindow,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    mark_drag(&state);
+    window
+        .start_dragging()
+        .map_err(|error| format!("не удалось начать перетаскивание: {error}"))
 }
 
 /// Возвращает фактические зарегистрированные шорткаты.
@@ -212,7 +212,6 @@ pub fn update_global_shortcut(
     state: State<'_, AppState>,
     old_shortcut: String,
     new_shortcut: String,
-    target: Option<String>,
 ) -> Result<(), String> {
     let old_shortcut = old_shortcut.trim().to_string();
     let new_shortcut = new_shortcut.trim().to_string();
@@ -224,16 +223,7 @@ pub fn update_global_shortcut(
         return Ok(());
     }
 
-    let is_clipboard = target
-        .as_deref()
-        .map(|value| value.eq_ignore_ascii_case("clipboard"))
-        .unwrap_or(false);
-
-    if is_clipboard {
-        register_clipboard(&app, &new_shortcut)?;
-    } else {
-        register_main(&app, &new_shortcut)?;
-    }
+    register_main(&app, &new_shortcut)?;
 
     if let Err(error) = app.global_shortcut().unregister(old_shortcut.as_str()) {
         let _ = app.global_shortcut().unregister(new_shortcut.as_str());
@@ -245,18 +235,7 @@ pub fn update_global_shortcut(
         .lock()
         .map_err(|_| "состояние шорткатов повреждено".to_string())?;
 
-    if is_clipboard {
-        settings.clipboard = new_shortcut;
-    } else {
-        settings.main = new_shortcut;
-    }
+    settings.main = new_shortcut;
 
-    Ok(())
-}
-
-/// Закрепляет окно поверх остальных и отключает автоскрытие.
-#[tauri::command]
-pub fn set_window_pin(pinned: bool, state: State<'_, AppState>) -> Result<(), String> {
-    state.is_pinned.store(pinned, Ordering::Relaxed);
     Ok(())
 }

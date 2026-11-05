@@ -1,4 +1,4 @@
-import { Copy, Languages, RotateCcw, Volume2 } from "lucide-react";
+import { Copy, Languages, Loader2, RotateCcw, Square, Volume2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { shortLanguageLabel } from "../lib/languages";
 import type { FlatDictionaryItem, TranslationResponse } from "../types";
@@ -14,7 +14,11 @@ interface ResultListProps {
   onPlayTts: (text: string, lang: string) => void;
   onRetry: () => void;
   targetLangUsed: string | null;
+  isTtsPlaying: boolean;
 }
+
+const actionClass =
+  "rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-white/[0.06] hover:text-white";
 
 export function ResultList({
   result,
@@ -27,6 +31,7 @@ export function ResultList({
   onPlayTts,
   onRetry,
   targetLangUsed,
+  isTtsPlaying,
 }: ResultListProps) {
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -40,148 +45,173 @@ export function ResultList({
   const selectedItem =
     selectedIndex >= 0 ? flatItems[selectedIndex] : undefined;
 
-  if (error) {
-    return (
-      <div className="flex-1 overflow-y-auto px-4 pb-3">
-        <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-3 text-sm text-red-200">
-          <div className="flex items-start justify-between gap-3">
-            <p className="whitespace-pre-wrap">{error}</p>
-            <button
-              type="button"
-              onClick={onRetry}
-              className="flex shrink-0 items-center gap-1 rounded-md bg-red-400/10 px-2 py-1 text-[11px] font-medium text-red-100 transition hover:bg-red-400/20"
-            >
-              <RotateCcw className="h-3 w-3" />
-              Повторить
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!result) {
-    return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 px-6 pb-4 text-center">
-        {isLoading ? (
-          <div className="w-full max-w-[320px] space-y-2">
-            <div className="h-6 w-3/4 animate-pulse rounded-md bg-white/[0.06]" />
-            <div className="h-4 w-1/2 animate-pulse rounded-md bg-white/[0.04]" />
-            <div className="mt-6 h-3 w-2/3 animate-pulse rounded-md bg-white/[0.03]" />
-          </div>
-        ) : (
-          <>
-            <Languages className="h-7 w-7 text-neutral-600" />
-            <p className="text-sm font-medium text-neutral-400">
-              Начните печатать — перевод появится автоматически
-            </p>
-            <p className="text-xs text-neutral-600">
-              Enter — скопировать и закрыть · Ctrl+Enter — озвучить
-            </p>
-          </>
-        )}
-      </div>
-    );
-  }
-
-  const source = result.detected_source_lang ?? "auto";
+  const source = result?.detected_source_lang ?? "auto";
   const target = targetLangUsed ?? "auto";
 
   let dictionaryCursor = 0;
 
   return (
-    <div className="flex-1 space-y-2 overflow-y-auto px-4 pb-3">
-      <section className="rounded-xl border border-white/[0.06] bg-white/[0.045] p-3">
-        <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-wide text-neutral-500">
-          <span>
-            {shortLanguageLabel(source)} → {shortLanguageLabel(target)}
-          </span>
-          <span className="text-neutral-700">•</span>
-          <span>{result.provider}</span>
-        </div>
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <div className="flex h-9 shrink-0 items-center justify-between px-4">
+        <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-400">
+          Перевод
+        </span>
+        {isLoading ? (
+          <Loader2
+            className="h-3.5 w-3.5 animate-spin text-zinc-400"
+            strokeWidth={1.8}
+          />
+        ) : null}
+      </div>
 
-        <div className="mt-1 flex items-start gap-2">
-          <p
-            dir="auto"
-            className="min-w-0 flex-1 text-[23px] font-medium leading-snug text-neutral-50"
-          >
-            {result.translated_text}
-          </p>
-          <div className="flex shrink-0 items-center gap-1">
+      {error ? (
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex items-start justify-between gap-3 rounded-lg border border-red-500/20 bg-red-500/[0.06] px-3 py-2.5">
+            <p className="whitespace-pre-wrap text-[13px] leading-relaxed text-red-200/90">
+              {error}
+            </p>
             <button
               type="button"
-              onClick={() => onPlayTts(result.translated_text, target)}
-              className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
-              title="Озвучить (Ctrl+Enter)"
-              aria-label="Озвучить перевод"
+              onClick={onRetry}
+              className="flex shrink-0 items-center gap-1 rounded-md px-1.5 py-1 font-mono text-[10px] uppercase tracking-wider text-red-200/70 transition-colors hover:bg-red-500/10 hover:text-red-100"
             >
-              <Volume2 className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              onClick={() => onCopy(result.translated_text, false)}
-              className="rounded-lg p-1.5 text-neutral-400 transition hover:bg-white/5 hover:text-neutral-100"
-              title="Копировать (Ctrl+C)"
-              aria-label="Копировать перевод"
-            >
-              <Copy className="h-4 w-4" />
+              <RotateCcw className="h-3 w-3" strokeWidth={1.8} />
+              Ещё раз
             </button>
           </div>
         </div>
-
-        {result.phonetic ? (
-          <p className="mt-0.5 text-sm text-neutral-400">{result.phonetic}</p>
-        ) : null}
-      </section>
-
-      {result.dictionary.length > 0 ? (
-        <section className="space-y-2">
-          {result.dictionary.map((entry, entryIndex) => (
-            <div
-              key={`${entry.part_of_speech}-${entryIndex}`}
-              className="rounded-lg border border-white/[0.04] bg-white/[0.02] px-2.5 py-2"
-            >
-              <div className="text-[10px] font-semibold uppercase tracking-wide text-indigo-300/70">
-                {entry.part_of_speech}
-              </div>
-              <div className="mt-1 flex flex-wrap gap-1.5">
-                {entry.terms.map((term) => {
-                  const index = dictionaryCursor;
-                  dictionaryCursor += 1;
-                  const isSelected = index === selectedIndex;
-
-                  return (
-                    <button
-                      key={`${term}-${index}`}
-                      ref={(element) => {
-                        itemRefs.current[index] = element;
-                      }}
-                      type="button"
-                      onMouseEnter={() => onSelectIndex(index)}
-                      onClick={() => onCopy(term, true)}
-                      className={`rounded-md px-2 py-0.5 text-[13px] transition ${
-                        isSelected
-                          ? "bg-indigo-500/25 text-indigo-100 ring-1 ring-indigo-400/40"
-                          : "bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08]"
-                      }`}
-                      title="Enter — скопировать"
-                    >
-                      {term}
-                    </button>
-                  );
-                })}
-              </div>
+      ) : !result ? (
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-2 px-6 pb-4 text-center">
+          {isLoading ? (
+            <div className="w-full max-w-[300px] space-y-3">
+              <div className="h-7 w-3/4 animate-pulse rounded bg-white/[0.05]" />
+              <div className="h-4 w-1/2 animate-pulse rounded bg-white/[0.035]" />
+              <div className="mt-5 h-3 w-2/3 animate-pulse rounded bg-white/[0.025]" />
             </div>
-          ))}
-        </section>
-      ) : null}
-
-      {selectedItem && selectedItem.reverseTranslations.length > 0 ? (
-        <div className="px-1 text-[11px] text-neutral-500">
-          <span className="text-neutral-600">Обратный перевод: </span>
-          {selectedItem.reverseTranslations.join(" · ")}
+          ) : (
+            <>
+              <Languages
+                className="h-5 w-5 text-zinc-500"
+                strokeWidth={1.5}
+              />
+              <p className="text-[14px] text-zinc-300">
+                Перевод появится автоматически
+              </p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-500">
+                Enter — копировать
+              </p>
+            </>
+          )}
         </div>
-      ) : null}
-    </div>
+      ) : (
+        <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.14em] text-zinc-400">
+            <span>
+              {shortLanguageLabel(source)} → {shortLanguageLabel(target)}
+            </span>
+            <span className="text-zinc-600">/</span>
+            <span>{result.provider}</span>
+          </div>
+
+          <div className="mt-2 flex items-start gap-2">
+            <p
+              dir="auto"
+              className="min-w-0 flex-1 text-[26px] font-semibold leading-[1.3] tracking-[-0.01em] text-ink"
+            >
+              {result.translated_text}
+            </p>
+            <div className="flex shrink-0 items-center gap-0.5 pt-1">
+              <button
+                type="button"
+                onClick={() => onPlayTts(result.translated_text, target)}
+                className={
+                  isTtsPlaying
+                    ? "rounded-md bg-white p-1.5 text-black transition-colors hover:bg-zinc-200"
+                    : actionClass
+                }
+                title={
+                  isTtsPlaying
+                    ? "Остановить озвучку (Ctrl+Enter)"
+                    : "Озвучить (Ctrl+Enter)"
+                }
+                aria-label={
+                  isTtsPlaying ? "Остановить озвучку" : "Озвучить перевод"
+                }
+              >
+                {isTtsPlaying ? (
+                  <Square className="h-3.5 w-3.5 fill-current" strokeWidth={1.8} />
+                ) : (
+                  <Volume2 className="h-4 w-4" strokeWidth={1.8} />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => onCopy(result.translated_text, false)}
+                className={actionClass}
+                title="Копировать (Ctrl+C)"
+                aria-label="Копировать перевод"
+              >
+                <Copy className="h-4 w-4" strokeWidth={1.8} />
+              </button>
+            </div>
+          </div>
+
+          {result.phonetic ? (
+            <p className="mt-1 text-[13px] text-zinc-400">{result.phonetic}</p>
+          ) : null}
+
+          {result.dictionary.length > 0 ? (
+            <>
+              <div className="my-3 h-px bg-line" />
+              <div className="space-y-3.5">
+                {result.dictionary.map((entry, entryIndex) => (
+                  <div key={`${entry.part_of_speech}-${entryIndex}`}>
+                    <div className="font-mono text-[10px] uppercase tracking-[0.16em] text-zinc-400">
+                      {entry.part_of_speech}
+                    </div>
+                    <div className="mt-1.5 flex flex-wrap gap-1">
+                      {entry.terms.map((term) => {
+                        const index = dictionaryCursor;
+                        dictionaryCursor += 1;
+                        const isSelected = index === selectedIndex;
+
+                        return (
+                          <button
+                            key={`${term}-${index}`}
+                            ref={(element) => {
+                              itemRefs.current[index] = element;
+                            }}
+                            type="button"
+                            onMouseEnter={() => onSelectIndex(index)}
+                            onClick={() => onCopy(term, true)}
+                            className={`rounded-md px-2 py-1 text-[14px] transition-colors ${
+                              isSelected
+                                ? "bg-white font-medium text-black"
+                                : "text-zinc-200 hover:bg-white/[0.06] hover:text-white"
+                            }`}
+                            title="Enter — скопировать"
+                          >
+                            {term}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : null}
+
+          {selectedItem && selectedItem.reverseTranslations.length > 0 ? (
+            <div className="mt-3 flex gap-1.5 text-[11px] leading-relaxed text-zinc-500">
+              <span className="shrink-0 text-zinc-400">обратный перевод</span>
+              <span className="text-zinc-300">
+                {selectedItem.reverseTranslations.join(" · ")}
+              </span>
+            </div>
+          ) : null}
+        </div>
+      )}
+    </section>
   );
 }
