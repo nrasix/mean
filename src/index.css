@@ -6,14 +6,20 @@
     "Helvetica Neue", Arial, sans-serif;
 }
 
+:root {
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
   height: 100%;
+  background: transparent;
 }
 
 body {
   margin: 0;
+  overflow: hidden;
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -21,4 +27,31 @@ body {
 
 ::selection {
   background-color: rgb(99 102 241 / 0.35);
+}
+
+[data-tauri-drag-region] {
+  user-select: none;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.16);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(255 255 255 / 0.26);
 }

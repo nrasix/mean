@@ -20,7 +20,7 @@
 | Сериализация | `serde` (`derive`), `serde_json` |
 | Ошибки | `thiserror` |
 | Парсинг HTML | `regex` |
-| Плагины | `global-shortcut`, `clipboard-manager`, `store`, опционально `positioner`, `autostart` |
+| Плагины | `global-shortcut`, `clipboard-manager`, `store`, `single-instance`, опционально `positioner`, `autostart` |
 
 ## Критические архитектурные правила
 
@@ -82,7 +82,7 @@
 ### Окно и системная интеграция
 
 - `tauri.conf.json`: `680×440`, `decorations: false`, `transparent: true`, `alwaysOnTop: true`, `center: true`, `skipTaskbar: true`, `visible: false`.
-- `toggle_translator_window`: если скрыто/не в фокусе — `unminimize` + `show` + `set_focus` и событие `app:shortcut-opened`; если видимо и в фокусе — `hide`.
+- `toggle_translator_window`: если скрыто/не в фокусе — `unminimize` + `show` + `set_focus` и событие `app:shortcut-opened`; если видимо и в фокусе — `hide`. Основной шорткат по умолчанию — `Shift+Alt+T`, резервный — `CommandOrControl+Shift+Space`.
 - Событие `app:translate-clipboard` — текст из буфера (читается в Rust) сразу на перевод.
 - `WindowEvent::Focused(false)` → `hide`, если `is_pinned == false` (`AtomicBool`, команда `set_window_pin`).
 - `update_global_shortcut(old, new)`: `unregister` старого + `register` нового на лету, без перезапуска.
@@ -92,7 +92,7 @@
 
 - **macOS**: `ActivationPolicy::Accessory` (нет иконки в Dock, работа поверх fullscreen).
 - **Windows**: кратковременно сбросить/установить `always_on_top` перед `set_focus`, чтобы обойти ограничение `SetForegroundWindow` для фонового процесса.
-- **Linux**: проверить X11; для Wayland предусмотреть запуск с флагом `--toggle` через системные шорткаты DE.
+- **Linux**: проверить X11; для Wayland предусмотреть запуск с флагом `--toggle` через системные шорткаты DE. Повторный запуск перехватывается `single-instance` и переключает окно вместо создания второго процесса.
 
 ## UI / UX-правила
 

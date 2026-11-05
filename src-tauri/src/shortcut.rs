@@ -1,5 +1,6 @@
 use std::sync::atomic::Ordering;
 
+use serde::Serialize;
 use tauri::{AppHandle, Emitter, Manager, State, WindowEvent};
 use tauri_plugin_clipboard_manager::ClipboardExt;
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, ShortcutState};
@@ -10,15 +11,11 @@ pub const FALLBACK_MAIN_SHORTCUT: &str = "CommandOrControl+Shift+Space";
 pub const DEFAULT_CLIPBOARD_SHORTCUT: &str = "CommandOrControl+Shift+T";
 
 pub fn default_main_shortcut() -> &'static str {
-    if cfg!(target_os = "macos") {
-        FALLBACK_MAIN_SHORTCUT
-    } else {
-        "Alt+Space"
-    }
+    "Shift+Alt+T"
 }
 
 /// Пользовательские сочетания клавиш, хранящиеся в состоянии приложения.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ShortcutSettings {
     pub main: String,
     pub clipboard: String,
@@ -196,6 +193,16 @@ fn attach_window_events(app: &AppHandle) -> Result<(), String> {
     });
 
     Ok(())
+}
+
+/// Возвращает фактические зарегистрированные шорткаты.
+#[tauri::command]
+pub fn get_shortcuts(state: State<'_, AppState>) -> Result<ShortcutSettings, String> {
+    state
+        .shortcuts
+        .lock()
+        .map(|guard| guard.clone())
+        .map_err(|_| "состояние шорткатов повреждено".to_string())
 }
 
 /// Динамически заменяет глобальный шорткат без перезапуска приложения.

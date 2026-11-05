@@ -29,19 +29,41 @@ pub fn run() {
     };
 
     tauri::Builder::default()
+        // Плагин должен быть зарегистрирован первым: он перехватывает повторный запуск.
+        .plugin(tauri_plugin_single_instance::init(|app, args, _cwd| {
+            if args.iter().any(|arg| arg == "--toggle") {
+                shortcut::toggle_translator_window(app);
+            } else {
+                shortcut::show_window(app, true);
+            }
+        }))
         .manage(state)
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .setup(|app| {
+            // macOS: приложение живёт в строке меню и не занимает Dock.
+            #[cfg(target_os = "macos")]
+            {
+                let _ = app.set_activation_policy(tauri::ActivationPolicy::Accessory);
+            }
+
             if let Err(error) = shortcut::init(app.handle()) {
                 eprintln!("Глобальные шорткаты недоступны: {error}");
             }
             tray::create_tray(app.handle())?;
+
+            // Linux/Wayland: системный шорткат DE может запускать приложение с --toggle.
+            if std::env::args().any(|arg| arg == "--toggle") {
+                shortcut::show_window(app.handle(), true);
+            }
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::translate_text,
+            commands::fetch_tts_audio,
+            shortcut::get_shortcuts,
             shortcut::update_global_shortcut,
             shortcut::set_window_pin
         ])

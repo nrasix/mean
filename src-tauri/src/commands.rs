@@ -1,10 +1,14 @@
 use tauri::State;
 
 use crate::translator::google::GoogleProvider;
-use crate::translator::models::{ProviderType, TranslationRequest, TranslationResponse};
+use crate::translator::models::{
+    ProviderType, TranslateError, TranslationRequest, TranslationResponse,
+};
+use crate::translator::tts;
 use crate::AppState;
 
 const AUTO: &str = "auto";
+const BING_FALLBACK_LABEL: &str = "Bing (Fallback)";
 
 /// Переводит текст выбранным провайдером.
 ///
@@ -46,11 +50,58 @@ pub async fn translate_text(
     };
 
     let response = match provider {
-        ProviderType::Google => GoogleProvider.translate(&state.http, &request).await,
+        ProviderType::Google => match GoogleProvider.translate(&state.http, &request).await {
+            Ok(response) => Ok(response),
+            Err(primary_error) if should_fallback(&primary_error) => {
+                eprintln!("Google недоступен, переключаюсь на Bing: {primary_error}");
+
+                match state.bing.translate(&state.http, &request).await {
+                    Ok(mut fallback) => {
+                        fallback.provider = BING_FALLBACK_LABEL.to_string();
+                        Ok(fallback)
+                    }
+                    Err(fallback_error) => {
+                        eprintln!("Резервный Bing тоже не сработал: {fallback_error}");
+                        Err(primary_error)
+                    }
+                }
+            }
+            Err(error) => Err(error),
+        },
         ProviderType::Bing => state.bing.translate(&state.http, &request).await,
     };
 
     response.map_err(|err| err.to_string())
+}
+
+/// Проверяет, стоит ли повторить запрос через Bing после ошибки Google.
+fn should_fallback(error: &TranslateError) -> bool {
+    match error {
+        TranslateError::RateLimited => true,
+        TranslateError::HttpStatus { status, .. } => {
+            *status == 429 || *status == 403 || *status == 503
+        }
+        _ => false,
+    }
+}
+
+/// Загружает MP3-озвучку текста через Google TTS.
+#[tauri::command]
+pub async fn fetch_tts_audio(
+    text: String,
+    lang: Option<String>,
+    state: State<'_, AppState>,
+) -> Result<Vec<u8>, String> {
+    let text = text.trim().to_string();
+    if text.is_empty() {
+        return Err("Текст для озвучки пуст".to_string());
+    }
+
+    let lang = lang.unwrap_or_else(|| "en".to_string());
+
+    tts::fetch_tts_audio(&state.http, &text, &lang)
+        .await
+        .map_err(|error| error.to_string())
 }
 
 fn normalize_lang(value: &str) -> String {
@@ -89,5 +140,22 @@ mod tests {
         assert_eq!(parse_provider(Some("Bing")), ProviderType::Bing);
         assert_eq!(parse_provider(Some("google")), ProviderType::Google);
         assert_eq!(parse_provider(None), ProviderType::Google);
+    }
+
+    #[test]
+    fn fallback_is_used_only_for_availability_errors() {
+        assert!(should_fallback(&TranslateError::RateLimited));
+        assert!(should_fallback(&TranslateError::HttpStatus {
+            status: 429,
+            body: String::new(),
+        }));
+        assert!(should_fallback(&TranslateError::HttpStatus {
+            status: 503,
+            body: String::new(),
+        }));
+        assert!(!should_fallback(&TranslateError::EmptyResponse));
+        assert!(!should_fallback(&TranslateError::InvalidRequest(
+            "пусто".to_string()
+        )));
     }
 }
