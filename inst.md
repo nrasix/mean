@@ -9,7 +9,7 @@
 | `.github/workflows/ci.yml` | Проверки для каждого pull request |
 | `.github/workflows/release.yml` | Сборка релиза по тегу `v*` и портативного Windows ZIP |
 | `.github/workflows/winget.yml` | Публикация манифеста в `microsoft/winget-pkgs` после публикации релиза |
-| `winget/manifests/...` | Манифест winget для `nrasix.MeanTranslator` |
+| `winget/manifests/...` | Манифест winget для `nrasix.Mean` |
 | `install.ps1` | Установка последнего релиза одной командой |
 | `docs/signpath-workflow.example.yml` | Шаблон подписи Windows через SignPath |
 
@@ -121,13 +121,13 @@ git push origin v1.0.0
 Проверить манифест локально (Windows, установленный winget):
 
 ```powershell
-winget validate --manifest .\winget\manifests\n\nrasix\MeanTranslator\1.0.0
+winget validate --manifest .\winget\manifests\n\nrasix\Mean\1.0.0
 ```
 
 Установка из локального манифеста:
 
 ```powershell
-winget install --manifest .\winget\manifests\n\nrasix\MeanTranslator\1.0.0
+winget install --manifest .\winget\manifests\n\nrasix\Mean\1.0.0
 ```
 
 Важно: `InstallerSha256` в репозитории соответствует локально собранному установщику 1.0.0. CI собирает файл заново, поэтому хэш может отличаться. Для автоматической публикации `winget-releaser` сам считает SHA-256 из assets опубликованного релиза — вручную менять манифест не нужно.

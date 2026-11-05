@@ -27,7 +27,7 @@ jobs:
       - name: Submit to microsoft/winget-pkgs
         uses: vedantmgoyal2009/winget-releaser@v2
         with:
-          identifier: nrasix.MeanTranslator
+          identifier: nrasix.Mean
           installers-regex: 'setup\.exe$'
           token: ${{ secrets.WINGET_TOKEN }}
           release-tag: ${{ github.event.release.tag_name || github.event.inputs.tag }}

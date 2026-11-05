@@ -1,7 +1,7 @@
 #requires -Version 5.1
 <#
 .SYNOPSIS
-    Устанавливает Mean Translator из последнего GitHub Release.
+    Устанавливает mean из последнего GitHub Release.
 
 .DESCRIPTION
     Скачивает установщик последнего релиза, проверяет SHA-256 по данным GitHub
@@ -43,7 +43,7 @@ Write-Step "Получаю информацию о релизе ($Version)"
 
 try {
     $release = Invoke-RestMethod -Uri $apiUrl -Headers @{
-        "User-Agent" = "mean-translator-installer"
+        "User-Agent" = "mean-installer"
         "Accept"     = "application/vnd.github+json"
     }
 } catch {
@@ -76,7 +76,7 @@ if ($asset.digest -and $asset.digest -match "^sha256:(?<hash>[0-9a-fA-F]{64})$")
     Write-Warning "GitHub не вернул digest для файла — пропускаю проверку SHA-256."
 }
 
-Write-Step "Устанавливаю Mean Translator"
+Write-Step "Устанавливаю mean"
 
 $process = Start-Process -FilePath $installerPath -ArgumentList "/S" -PassThru -Wait
 
@@ -87,5 +87,5 @@ if ($process.ExitCode -ne 0) {
 Remove-Item -Path $installerPath -Force -ErrorAction SilentlyContinue
 
 Write-Host ""
-Write-Host "Готово. Mean Translator установлен." -ForegroundColor Green
+Write-Host "Готово. mean установлен." -ForegroundColor Green
 Write-Host "Запустите приложение из меню «Пуск» или нажмите Shift+Alt+T."

@@ -1,4 +1,4 @@
-# Mean Translator
+# mean
 
 [![CI](https://github.com/nrasix/mean/actions/workflows/ci.yml/badge.svg)](https://github.com/nrasix/mean/actions/workflows/ci.yml)
 
@@ -46,13 +46,13 @@ irm https://raw.githubusercontent.com/nrasix/mean/master/install.ps1 | iex
 ### winget
 
 ```powershell
-winget install nrasix.MeanTranslator
+winget install nrasix.Mean
 ```
 
 Короткий вариант по moniker:
 
 ```powershell
-winget install meantranslator
+winget install mean
 ```
 
 Манифест находится в [`winget/`](winget), публикация в `microsoft/winget-pkgs` автоматизирована через GitHub Actions.
@@ -60,7 +60,7 @@ winget install meantranslator
 ### Windows вручную
 
 - **Установщик**: `*-setup.exe` (NSIS) или `.msi`.
-- **Портативная версия**: `*-windows-x64-portable.zip` — распакуйте и запустите `mean-translator.exe`. Установка не требуется.
+- **Портативная версия**: `*-windows-x64-portable.zip` — распакуйте и запустите `mean.exe`. Установка не требуется.
 - Требуется **WebView2 Runtime**. В Windows 10/11 он обычно уже установлен; если нет — скачайте с [официального сайта Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/).
 
 ### macOS
@@ -68,7 +68,7 @@ winget install meantranslator
 - Скачайте `.dmg`, перетащите приложение в `Applications`.
 - Сборка не подписана и не нотаризована Apple. При первом запуске: правый клик по приложению → **Открыть**, либо выполните:
   ```bash
-  xattr -dr com.apple.quarantine "/Applications/Mean Translator.app"
+  xattr -dr com.apple.quarantine "/Applications/mean.app"
   ```
 - Приложение работает как accessory: иконки в Dock нет, управление — через строку меню и шорткат.
 
@@ -76,13 +76,13 @@ winget install meantranslator
 
 - **AppImage** — портативный вариант: сделайте файл исполняемым и запустите.
   ```bash
-  chmod +x Mean-Translator_*.AppImage
-  ./Mean-Translator_*.AppImage
+  chmod +x mean_*.AppImage
+  ./mean_*.AppImage
   ```
 - Либо установите `.deb` / `.rpm`.
 - На **Wayland** глобальные шорткаты приложения могут быть недоступны. Назначьте системный шорткат на запуск:
   ```bash
-  mean-translator --toggle
+  mean --toggle
   ```
   Повторный запуск перехватывается single-instance и переключает окно, а не создаёт второй процесс.
 
@@ -195,4 +195,4 @@ Workflow `.github/workflows/release.yml` собирает установщики
 
 ## Лицензия
 
-[MIT](LICENSE) © Mean Translator contributors. Проект можно свободно использовать, изменять и распространять.
+[MIT](LICENSE) © mean contributors. Проект можно свободно использовать, изменять и распространять.

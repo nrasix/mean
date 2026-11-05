@@ -61,7 +61,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "Mean Translator ${{ github.ref_name }}"
+          releaseName: "mean ${{ github.ref_name }}"
           releaseBody: "Windows, macOS and Linux builds. See the README for details."
           releaseDraft: false
           prerelease: false
@@ -71,8 +71,8 @@ jobs:
         if: matrix.platform == 'windows-latest'
         shell: pwsh
         run: |
-          $source = "src-tauri/target/release/mean-translator.exe"
-          $target = "mean-translator-${{ github.ref_name }}-windows-x64-portable.zip"
+          $source = "src-tauri/target/release/mean.exe"
+          $target = "mean-${{ github.ref_name }}-windows-x64-portable.zip"
           Compress-Archive -Path $source -DestinationPath $target -Force
 
       - name: Upload portable Windows build
@@ -81,5 +81,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          $asset = "mean-translator-${{ github.ref_name }}-windows-x64-portable.zip"
+          $asset = "mean-${{ github.ref_name }}-windows-x64-portable.zip"
           gh release upload "${{ github.ref_name }}" $asset --clobber

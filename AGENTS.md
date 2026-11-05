@@ -69,7 +69,7 @@
 │   ├── ci.yml                    # fmt, clippy, tests, frontend build для PR
 │   ├── release.yml               # сборка релиза по тегу + portable zip
 │   └── winget.yml                # публикация манифеста в winget-pkgs
-├── winget/manifests/             # манифест nrasix.MeanTranslator
+├── winget/manifests/             # манифест nrasix.Mean
 ├── docs/signpath-workflow.example.yml  # шаблон подписи Windows
 ├── install.ps1                    # установка последнего релиза одной командой
 ├── README.md

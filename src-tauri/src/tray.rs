@@ -25,7 +25,7 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     let mut builder = TrayIconBuilder::new()
         .menu(&menu)
         .show_menu_on_left_click(false)
-        .tooltip("Mean Translator")
+        .tooltip("mean")
         .on_menu_event(|app, event| match event.id.as_ref() {
             "open" => shortcut::toggle_translator_window(app),
             "settings" => shortcut::show_settings(app),

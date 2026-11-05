@@ -1,4 +1,4 @@
-# Mean Translator
+# mean
 
 [![CI](https://github.com/nrasix/mean/actions/workflows/ci.yml/badge.svg)](https://github.com/nrasix/mean/actions/workflows/ci.yml)
 
@@ -46,13 +46,13 @@ The script lives in this repository — you can [review it before running](https
 ### winget
 
 ```powershell
-winget install nrasix.MeanTranslator
+winget install nrasix.Mean
 ```
 
 Or by moniker:
 
 ```powershell
-winget install meantranslator
+winget install mean
 ```
 
 The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-pkgs` is automated with GitHub Actions.
@@ -60,7 +60,7 @@ The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-p
 ### Windows manually
 
 - **Installer**: `*-setup.exe` (NSIS) or `.msi`.
-- **Portable build**: `*-windows-x64-portable.zip` — extract and run `mean-translator.exe`. No installation required.
+- **Portable build**: `*-windows-x64-portable.zip` — extract and run `mean.exe`. No installation required.
 - **WebView2 Runtime** is required. It is usually preinstalled on Windows 10/11; otherwise download it from [Microsoft](https://developer.microsoft.com/microsoft-edge/webview2/).
 
 ### macOS
@@ -68,7 +68,7 @@ The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-p
 - Download the `.dmg` and drag the app into `Applications`.
 - The build is not signed or notarized by Apple. On first launch use right-click → **Open**, or run:
   ```bash
-  xattr -dr com.apple.quarantine "/Applications/Mean Translator.app"
+  xattr -dr com.apple.quarantine "/Applications/mean.app"
   ```
 - The app runs as an accessory: there is no Dock icon; use the menu bar and the global shortcut.
 
@@ -76,13 +76,13 @@ The manifest is stored in [`winget/`](winget); publishing to `microsoft/winget-p
 
 - **AppImage** — portable option: make it executable and run it.
   ```bash
-  chmod +x Mean-Translator_*.AppImage
-  ./Mean-Translator_*.AppImage
+  chmod +x mean_*.AppImage
+  ./mean_*.AppImage
   ```
 - Alternatively install the `.deb` / `.rpm` package.
 - On **Wayland** the app's global shortcut may be unavailable. Bind a desktop shortcut to:
   ```bash
-  mean-translator --toggle
+  mean --toggle
   ```
   A second launch is intercepted by single-instance and toggles the window instead of starting another process.
 
@@ -195,4 +195,4 @@ git push origin v1.0.0
 
 ## License
 
-[MIT](LICENSE) © Mean Translator contributors. Free to use, modify and distribute.
+[MIT](LICENSE) © mean contributors. Free to use, modify and distribute.
